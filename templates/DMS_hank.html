@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>駕駛監控系統</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-areas:
+                "header header header"
+                "left center right";
+            grid-template-rows: auto 1fr;
+            grid-template-columns: 320px 1fr 400px;
+            height: 100vh;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        /* 左側邊欄 */
+        .left-sidebar {
+            grid-area: left;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .driver-profile {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #3a3a3a;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .profile-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #14b8a6, #0891b2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .profile-info h3 {
+            color: #ffffff;
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .profile-info p {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .profile-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #1e4d4d;
+            border-radius: 6px;
+            border-left: 4px solid #14b8a6;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .metrics-panel {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #3a3a3a;
+            flex: 1;
+        }
+
+        .metrics-title {
+            color: #ffffff;
+            font-size: 16px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .metric-item:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+
+        .metric-value {
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .metric-normal {
+            background: #1e4d4d;
+            color: #10b981;
+        }
+
+        .metric-warning {
+            background: #4d3e1e;
+            color: #f59e0b;
+        }
+
+        .metric-critical {
+            background: #4d1e1e;
+            color: #ef4444;
+        }
+
+        .alert-ticker {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #3a3a3a;
+            height: 200px;
+            overflow-y: auto;
+        }
+
+        .alert-ticker h4 {
+            color: #ffffff;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .alert-info {
+            background: #1e3a4d;
+            color: #0891b2;
+        }
+
+        .alert-warning {
+            background: #4d3e1e;
+            color: #f59e0b;
+        }
+
+        .alert-time {
+            color: #888;
+            font-size: 11px;
+        }
+
+        /* 中間內容 */
+        .center-content {
+            grid-area: center;
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #3a3a3a;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .dashboard-header {
+            grid-area: header;
+            display: flex; /* 啟用 Flexbox */
+            /* 移除 flex-direction: column; 以讓元素水平排列 */
+            align-items: center; /* 垂直居中對齊 items */
+            justify-content: space-between; /* 將第一個元素推到左邊，第二個推到右邊 */
+            padding: 0 50px; /* 添加左右內邊距，與儀表板的 padding 一致 */
+        }
+
+        .dashboard-title {
+            color: #ffffff;
+            font-size: 24px; /* 保持原有的字體大小 */
+            font-weight: 600;
+            margin-right: 20px; /* 讓標題和時間之間有一些空間 */
+        }
+
+        .time-display {
+            color: #14b8a6;
+            font-size: 1.2em; /* 稍微縮小字體 */
+            font-weight: 500;
+            text-transform: uppercase;
+            /* margin-left: auto; */ /* 如果不使用 space-between，可以用這個推到最右 */
+        }
+
+        /* 右側邊欄 */
+        .right-sidebar {
+            grid-area: right;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .video-feed {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #3a3a3a;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .video-title {
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .recording-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #ef4444;
+            font-size: 12px;
+        }
+
+        .rec-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #ef4444;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .video-container {
+            flex: 1;
+            background: #1a1a1a;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-height: 300px;
+            border: 2px solid #3a3a3a;
+        }
+
+        .video-placeholder {
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .detection-overlay {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(20, 184, 166, 0.9);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .bottom-metrics {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #3a3a3a;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: #1a1a1a;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #3a3a3a;
+        }
+
+        .metric-card h5 {
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-card .value {
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .metric-card .unit {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .historical-logs {
+            border-top: 1px solid #3a3a3a;
+            padding-top: 16px;
+        }
+
+        .logs-title {
+            color: #ffffff;
+            font-size: 14px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .log-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #3a3a3a;
+            font-size: 13px;
+        }
+
+        .log-item:last-child {
+            border-bottom: none;
+        }
+
+        .log-event {
+            color: #e0e0e0;
+        }
+
+        .log-time {
+            color: #888;
+        }
+
+        /* 滾動條樣式 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #14b8a6;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0891b2;
+        }.alert-marquee {
+        border-radius: 12px;
+        margin: 20px;
+        }
+
+        .theme-toggle {
+        cursor: pointer;
+        font-size: 1.5rem;
+        border: none;
+        background: transparent;
+        color: #facc15;
+        }
+
+    #map {
+      width: 100%;
+      height: 400px;
+      border-radius: 12px;
+      border: 2px solid #3a3a3a;
+      margin-top: 20px;
+    }
+    .alert-marquee {
+      margin: 12px;
+      padding: 10px;
+      background: #444;
+      color: yellow;
+      font-weight: bold;
+      border-radius: 6px;
+    }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  body.dark-theme {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+  }
+
+  body.light-theme {
+    background-color: #dbeafe; /* 淡藍色背景 */
+    color: #1a1a1a;
+  }
+
+  .light-theme .dashboard,
+  .light-theme .left-sidebar,
+  .light-theme .center-content,
+  .light-theme .right-sidebar,
+  .light-theme .metrics-panel,
+  .light-theme .video-feed,
+  .light-theme .bottom-metrics,
+  .light-theme .metric-card,
+  .light-theme .alert-ticker,
+  .light-theme .driver-profile {
+  background-color: #ffffff;
+  color: #1a1a1a;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .light-theme .metric-label,
+  .light-theme .metrics-title,
+  .light-theme .dashboard-title,
+  .light-theme .video-title,
+  .light-theme .profile-info h3,
+  .light-theme .log-event,
+  .light-theme .log-time,
+  .light-theme .alert-item,
+  .light-theme .alert-ticker h4 {
+    color: #1a1a1a !important;
+  }
+
+  .light-theme .profile-status {
+    background-color: #e0f2f1;
+    border-left-color: #14b8a6;
+    color: #1a1a1a;
+  }
+
+  .light-theme .status-dot {
+    background-color: #10b981;
+  }
+
+  .light-theme .metric-normal {
+    background-color: #d1e7dd;
+    color: #0f5132;
+  }
+
+  .light-theme .metric-warning {
+    background-color: #fff3cd;
+    color: #664d03;
+  }
+
+  .light-theme .metric-critical {
+    background-color: #f8d7da;
+    color: #842029;
+  }
+
+  .light-theme .recording-indicator,
+  .light-theme .theme-toggle {
+    color: #b91c1c;
+  }
+
+  .light-theme .video-container {
+    background-color: #f1f5f9;
+  }
+
+  .light-theme .time-display {
+    color: #0891b2;
+  }
+
+  .light-theme .alert-marquee {
+    background-color: #fff3cd;
+    color: #92400e;
+  }
+
+  .light-theme .theme-toggle {
+    color: #facc15;
+  }
+
+  .light-theme .map-container #map {
+    border-color: #ccc;
+  }
+
+  .light-theme .alert-warning {
+    background-color: #fff3cd;
+    color: #92400e;
+  }
+
+  .light-theme .alert-info {
+    background-color: #dbeafe;
+    color: #1e40af;
+  }
+
+  .light-theme .alert-time {
+    color: #555;
+  }
+
+  .light-theme .alert-item span {
+    color: inherit;
+  }
+
+  .light-theme .value,
+  .light-theme .unit {
+    color: #1a1a1a;
+  }
+
+  .light-theme table,
+  .light-theme th,
+  .light-theme td {
+    color: #1a1a1a;
+    background-color: #ffffff;
+    border-color: #ccc;
+  }
+
+  .light-theme input,
+  .light-theme button {
+    color: #1a1a1a;
+    background-color: #f1f5f9;
+    border: 1px solid #ccc;
+  }
+
+  .light-theme button:hover {
+    background-color: #e2e8f0;
+  }
+
+  .light-theme .metric-card .value,
+  .light-theme .metric-card .unit {
+    color: #1a1a1a;
+  }
+
+  .light-theme .metric-card h5 {
+    color: #444;
+  }
+
+  .light-theme .metric-card {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    background-color: #ffffff;
+    padding: 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+
+  .light-theme .metrics-grid {
+    background-color: transparent;
+  }
+
+  .light-theme .center-content,
+  .light-theme .video-container {
+    background-color: #ffffff !important;
+  }
+</style>
+
+</head>
+<body class="dark-theme">
+  <div class="dashboard">
+    <!-- Header -->
+    <div class="dashboard-header">
+      <h1 class="dashboard-title">駕駛監控系統</h1>
+      <div class="time-display" id="dashboardTime">--:--:--</div>
+    </div>
+
+    <!-- 左側邊欄 -->
+    <div class="left-sidebar">
+      <div class="driver-profile">
+        <div class="profile-header">
+          <div class="profile-avatar">JD</div>
+          <div class="profile-info">
+            <h3>John Doe</h3>
+            <p>駕照: DL-789456123</p>
+          </div>
+        </div>
+        <div class="profile-status">
+          <div class="status-dot"></div>
+          <span>活動中 - 執行中</span>
+        </div>
+      </div>
+
+      <div class="metrics-panel">
+        <h4 class="metrics-title">即時偵測</h4>
+
+        <div class="metric-item">
+          <span class="metric-label">疲勞指數</span>
+          <span class="metric-value metric-normal" id="fatigueLevel">--</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">注意力</span>
+          <span class="metric-value metric-normal" id="attentionLevel">--</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">眨眼次數</span>
+          <span class="metric-value metric-normal" id="blink">--</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">頭部姿勢</span>
+          <span class="metric-value metric-normal" id="headPose">--</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">EAR</span>
+          <span class="metric-value metric-normal" id="ear">--</span>
+        </div>
+
+        <div class="metric-item">
+          <span class="metric-label">打哈欠次數</span>
+          <span class="metric-value metric-normal" id="yawnCount">--</span>
+        </div>
+      </div>
+      
+
+      <div class="alert-ticker" id="alert-ticker">
+        <h4>最近警報</h4>
+    
+</div>
+    </div>
+<script>
+function updateAlertTicker() {
+  fetch('http://localhost:5000/events')  // or /alerts
+    .then(response => response.json())
+    .then(data => {
+      const container = document.getElementById('alert-ticker');
+      if (!container) return;
+
+      container.innerHTML = '<h4>最近警報</h4>';
+
+      const recent = data.slice(-5).reverse();
+      recent.forEach(item => {
+        const alertDiv = document.createElement('div');
+        alertDiv.classList.add('alert-item');
+
+        if (item.status === '⚠️') {
+          alertDiv.classList.add('alert-warning');
+        } else {
+          alertDiv.classList.add('alert-info');
+        }
+
+        alertDiv.innerHTML = `
+          <span>${item.status} ${item.event}</span>
+          <span class="alert-time">${item.timestamp}</span>
+        `;
+        container.appendChild(alertDiv);
+      });
+    })
+    .catch(error => {
+      console.error('⚠️ 無法取得警報資料:', error);
+    });
+}
+
+setInterval(updateAlertTicker, 3000);
+</script>
+
+
+    <!-- 中間內容 -->
+    <div class="center-content">
+      <div class="video-feed">
+        <div class="video-header">
+          <h4 class="video-title">即時攝影畫面</h4>
+          <div class="recording-indicator">
+            <div class="rec-dot"></div>
+            <span>錄製中</span>
+          </div>
+        </div>
+        <div class="video-container">
+          <img src="http://127.0.0.1:5000/video_feed" width="100%" height="100%" alt="Live Video">
+        </div>
+      </div>
+    </div>
+<!-- 右側邊欄 -->
+<div class="right-sidebar">
+  <div class="bottom-metrics">
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <h5>今天的違規</h5>
+        <span class="value" id="violation-count">3</span>
+      </div>
+      <div class="metric-card">
+        <h5>警報分數</h5>
+        <span class="value">85</span><span class="unit">%</span>
+      </div>
+      <div class="metric-card">
+        <h5>旅程時間</h5>
+            <span class="value" id="route-duration-hours">--</span><span class="value"></span>
+            <!-- <span class="unit" id="route-duration-minutes">--</span><span class="unit"></span> -->
+      </div>
+      <div class="metric-card">
+        <h5>距離</h5>
+        <span class="value" id="route-distance">--</span><span class="unit"></span>
+      </div>
+    </div>
+
+    <!-- 預估抵達資訊 -->
+    <div class="metric-card">
+      <h5>預估抵達資訊</h5>
+      <div id="map" style="margin-bottom: 12px;"></div>
+      <input id="origin-input" type="text" placeholder="輸入出發地"
+        style="padding: 8px; width: 45%; border-radius: 6px; margin-right: 10px;">
+      <input id="destination-input" type="text" placeholder="輸入目的地"
+        style="padding: 8px; width: 45%; border-radius: 6px;">
+      <button onclick="calculateRoute()" style="padding: 8px 16px; margin-top: 10px; border-radius: 6px; background-color: #14b8a6; color: white; border: none;">開始導航</button>
+    </div>
+  </div>
+
+
+</head>
+
+  <script>
+    let map, directionsService, directionsRenderer;
+
+    function initMap() {
+      directionsService = new google.maps.DirectionsService();
+      directionsRenderer = new google.maps.DirectionsRenderer();
+
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 25.0330, lng: 121.5654 }, // 預設中心台北101
+        zoom: 13,
+        mapTypeControl: false
+      });
+
+      directionsRenderer.setMap(map);
+    }
+
+function calculateRoute() {
+  const origin = document.getElementById("origin-input").value;
+  const destination = document.getElementById("destination-input").value;
+
+  if (!origin || !destination) {
+    alert("請輸入出發地與目的地！");
+    return;
+  }
+
+  const request = {
+    origin: origin,
+    destination: destination,
+    travelMode: google.maps.TravelMode.DRIVING,
+  };
+
+  directionsService.route(request, (result, status) => {
+    if (status === "OK") {
+      directionsRenderer.setDirections(result);
+
+      const leg = result.routes[0].legs[0];
+      const distanceText = leg.distance.text;
+      const durationText = leg.duration.text;
+
+      // 更新距離（去除「公里」文字）
+      document.getElementById("route-distance").textContent = distanceText.replace("公里", "");
+
+      // 更新旅程時間（自動拆成「小時」與「分鐘」）
+      const durationMatch = durationText.match(/(\d+)\s*小時\s*(\d+)?\s*分鐘?/);
+      if (durationMatch) {
+        document.getElementById("route-duration-hours").textContent = durationText.replace("hours", "hrs");
+        // document.getElementById("route-duration-minutes").textContent = durationText.replace("min", "");
+        // document.getElementById("route-duration-hours").textContent = `${durationMatch[1]}`;
+        // document.getElementById("route-duration-minutes").textContent = `${durationMatch[2] || ''}`;
+      } else {
+        // 只有幾分鐘的情況
+        document.getElementById("route-duration-hours").textContent = durationText.replace("hours", "hrs");
+        // document.getElementById("route-duration-minutes").textContent = durationText.replace("min", "");
+        // document.getElementById("route-duration-hours").textContent = ``;
+        // document.getElementById("route-duration-minutes").textContent = durationText;
+      }
+
+      // 額外顯示在某個區域（如果你有 id="route-info"）
+      const infoDiv = document.getElementById("route-info");
+      if (infoDiv) {
+        infoDiv.innerHTML = `⏳ 預估時間：${durationText}，📍距離：${distanceText}`;
+      }
+
+    } else {
+      alert("無法規劃路線: " + status);
+      console.error("Google Maps Directions API 回傳錯誤：", status);
+    }
+  });
+}
+
+    
+  </script>
+
+  <!-- ✅ 請將 YOUR_API_KEY 替換成你自己的金鑰 -->
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyADv6rM97_fP3lrVxCDfi6NhPbdG1EMEs0&callback=initMap">
+</script>
+  </script>
+</body>
+<!-- 歷史紀錄表格 -->
+  <div class="historical-logs">
+            <h5 class="logs-title">歷史紀錄</h5>
+            <div style="max-height: 250px; overflow-y: auto;"> <table id="eventTable" border="0" cellspacing="0" cellpadding="4" style="width:100%;">
+                    <thead>
+                        <tr style="background-color: #3a3a3a;">
+                            <th style="text-align: left; padding: 8px;">時間</th>
+                            <th style="text-align: left; padding: 8px;">事件</th>
+                            <th style="text-align: left; padding: 8px;">狀態</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+<!-- 警報跑馬燈 
+ <div id="alert" class="alert-marquee">⚠️ 正在監控駕駛狀態...</div>
+ -->
+ <!-- 跑馬燈提示 -->
+  <div class="alert-marquee bg-warning text-dark p-2 fw-bold">
+    <marquee behavior="scroll" direction="left" scrollamount="5">
+      ⚠️ 疲勞偵測中：駕駛眼睛閉合過久，請注意安全駕駛。未繫安全帶已回報。
+    </marquee>
+  </div>
+
+  <!-- 主題切換按鈕 -->
+  <button class="theme-toggle" onclick="toggleTheme()" style="position: fixed; top: 20px; right: 20px; z-index: 999;">
+    🌙
+  </button>
+<script>
+  // 更新主監控數據與警報
+  function updateData() {
+    fetch('http://localhost:5000/data')
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('fatigueLevel').textContent = data.fatigue_level.toFixed(2);
+        document.getElementById('attentionLevel').textContent = data.attention_level.toFixed(2);
+        document.getElementById('blink').textContent = data.blink_count;
+        document.getElementById('ear').textContent = data.ear.toFixed(3);
+
+        const yawnEl = document.getElementById('yawn');
+        if (yawnEl) yawnEl.textContent = data.yawn_count;
+
+        const headPoseEl = document.getElementById('headPose');
+        if (data.head_pose && typeof data.head_pose === 'object') {
+          headPoseEl.textContent = `Pitch: ${data.head_pose.pitch?.toFixed(1) ?? 'N/A'}, Yaw: ${data.head_pose.yaw?.toFixed(1) ?? 'N/A'}, Roll: ${data.head_pose.roll?.toFixed(1) ?? 'N/A'}`;
+        } else {
+          headPoseEl.textContent = '無資料';
+        }
+
+        const alertDiv = document.getElementById('alert');
+        if (alertDiv) {
+          if (data.alerts && data.alerts.length > 0) {
+            const latestAlert = data.alerts[data.alerts.length - 1];
+            alertDiv.innerHTML = `
+              <marquee behavior="scroll" direction="left" scrollamount="5">
+                <strong>⚠️ ${latestAlert.message}</strong>
+              </marquee>
+            `;
+            alertDiv.style.display = 'block';
+          } else {
+            alertDiv.style.display = 'none';
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+      });
+  }
+
+  // 更新歷史事件紀錄（只保留最新 5 筆）
+  function fetchEvents() {
+    fetch('http://localhost:5000/events')
+      .then(response => response.json())
+      .then(data => {
+        const tbody = document.getElementById('eventTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        const recentFive = data.slice(-5).reverse();
+        recentFive.forEach(event => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${event.timestamp}</td>
+            <td>${event.event}</td>
+            <td>${event.status ? '⚠️' : '✅'}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      })
+      .catch(err => {
+        console.error('取得歷史紀錄失敗:', err);
+      });
+  }
+
+  // 更新時間顯示
+  function updateTime() {
+    const now = new Date();
+    const fullTime = now.toLocaleTimeString() + ' - ' + now.toLocaleDateString('zh-Hant', {
+      year: 'numeric', month: 'long', day: '2-digit'
+    });
+    document.getElementById('dashboardTime').textContent = fullTime;
+  }
+
+  // 主題切換
+  function toggleTheme() {
+    const body = document.body;
+    body.classList.toggle('light-theme');
+    body.classList.toggle('dark-theme');
+    document.querySelectorAll('.theme-toggle').forEach(btn => {
+      btn.textContent = body.classList.contains('light-theme') ? '☀️' : '🌙';
+    });
+  }
+
+  // 警報跑馬燈自動滾動（如果有用）
+  const alertTicker = document.querySelector('.alert-ticker');
+  if (alertTicker) {
+    let scrollPos = 0;
+    setInterval(() => {
+      scrollPos += 1;
+      if (scrollPos >= alertTicker.scrollHeight - alertTicker.clientHeight) {
+        scrollPos = 0;
+      }
+      alertTicker.scrollTop = scrollPos;
+    }, 3000);
+  }
+
+  // 初始化（⚠️ ❌ 不要再呼叫 simulateMetricUpdates）
+  window.onload = () => {
+    const hour = new Date().getHours();
+    if (hour >= 6 && hour <= 18) {
+      document.body.classList.add('light-theme');
+      document.body.classList.remove('dark-theme');
+      document.querySelectorAll('.theme-toggle').forEach(btn => btn.textContent = '☀️');
+    } else {
+      document.body.classList.add('dark-theme');
+      document.body.classList.remove('light-theme');
+      document.querySelectorAll('.theme-toggle').forEach(btn => btn.textContent = '🌙');
+    }
+
+    updateData();
+    fetchEvents();
+    updateTime();
+    updateAlertTicker();
+  };
+
+  // 定時更新
+  setInterval(updateData, 1000);      // 每秒更新數據
+  setInterval(fetchEvents, 2000);     // 每 2 秒更新歷史紀錄
+  setInterval(updateTime, 1000);      // 每秒更新時間
+</script>
+</body>
+</html>
