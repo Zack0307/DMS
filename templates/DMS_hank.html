@@ -590,6 +590,46 @@
   .light-theme .video-container {
     background-color: #ffffff !important;
   }
+  .vtuber-window {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 180px;
+  height: 180px;
+  border-radius: 10px;
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 2px solid #00ffff;
+  box-shadow: 0 0 12px rgba(0,255,255,0.5);
+  z-index: 100;
+}
+
+.vtuber-window img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+.work-toggle {
+  margin-top: 15px;
+  text-align: center;
+}
+
+#toggle-button {
+  background-color: #00c896;
+  border: none;
+  color: white;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#toggle-button:hover {
+  background-color: #009e78;
+}
+
 </style>
 
 </head>
@@ -601,21 +641,29 @@
       <div class="time-display" id="dashboardTime">--:--:--</div>
     </div>
 
-    <!-- 左側邊欄 -->
-    <div class="left-sidebar">
-      <div class="driver-profile">
-        <div class="profile-header">
-          <div class="profile-avatar">JD</div>
-          <div class="profile-info">
-            <h3>John Doe</h3>
-            <p>駕照: DL-789456123</p>
+      <!-- 左側邊欄 -->
+      <div class="left-sidebar">
+        <div class="driver-profile">
+          <div class="profile-header">
+            <div class="profile-avatar">JD</div>
+            <div class="profile-info">
+              <h3>John Doe</h3>
+              <p>駕照: DL-789456123</p>
+            </div>
+          </div>
+
+          <!-- 狀態文字 -->
+          <div class="profile-status">
+            <div class="status-dot"></div>
+            <span id="work-status">活動中 - 執行中</span>
+          </div>
+
+          <!-- 上下班切換按鈕 -->
+          <div class="work-toggle">
+            <button id="toggle-button">下班</button>
           </div>
         </div>
-        <div class="profile-status">
-          <div class="status-dot"></div>
-          <span>活動中 - 執行中</span>
-        </div>
-      </div>
+
 
       <div class="metrics-panel">
         <h4 class="metrics-title">即時偵測</h4>
@@ -694,21 +742,29 @@ setInterval(updateAlertTicker, 3000);
 </script>
 
 
-    <!-- 中間內容 -->
-    <div class="center-content">
-      <div class="video-feed">
-        <div class="video-header">
-          <h4 class="video-title">即時攝影畫面</h4>
-          <div class="recording-indicator">
-            <div class="rec-dot"></div>
-            <span>錄製中</span>
-          </div>
-        </div>
-        <div class="video-container">
-          <img src="http://127.0.0.1:5000/video_feed" width="100%" height="100%" alt="Live Video">
-        </div>
+<!-- 中間內容 -->
+<div class="center-content">
+  <div class="video-feed">
+    <div class="video-header">
+      <h4 class="video-title">即時攝影畫面</h4>
+      <div class="recording-indicator">
+        <div class="rec-dot"></div>
+        <span>錄製中</span>
       </div>
     </div>
+
+    <!-- ⬇️ 包住影像與 avatar 的 container -->
+    <div class="video-container">
+      <img src="http://127.0.0.1:5000/video_feed" width="100%" height="100%" alt="Live Video">
+
+      <!-- ✅ Avatar 視窗放在這裡才會正確定位 -->
+      <div class="vtuber-window">
+        <img id="avatar-img" src="avatar_normal.png" alt="虛擬駕駛">
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 右側邊欄 -->
 <div class="right-sidebar">
   <div class="bottom-metrics">
@@ -735,14 +791,22 @@ setInterval(updateAlertTicker, 3000);
     <!-- 預估抵達資訊 -->
     <div class="metric-card">
       <h5>預估抵達資訊</h5>
-      <div id="map" style="margin-bottom: 12px;"></div>
-      <input id="origin-input" type="text" placeholder="輸入出發地"
-        style="padding: 8px; width: 45%; border-radius: 6px; margin-right: 10px;">
+      <div id="map" style="margin-bottom: 12px; height: 250px;"></div>
+
+      <!-- ✅ 移除出發地輸入欄，只保留目的地 -->
       <input id="destination-input" type="text" placeholder="輸入目的地"
-        style="padding: 8px; width: 45%; border-radius: 6px;">
-      <button onclick="calculateRoute()" style="padding: 8px 16px; margin-top: 10px; border-radius: 6px; background-color: #14b8a6; color: white; border: none;">開始導航</button>
+        style="padding: 8px; width: 90%; border-radius: 6px; margin-bottom: 10px;">
+
+      <button onclick="calculateRoute()" style="
+        padding: 8px 16px;
+        border-radius: 6px;
+        background-color: #14b8a6;
+        color: white;
+        border: none;
+        width: 100%;
+      ">開始導航</button>
     </div>
-  </div>
+
 
 
 </head>
@@ -764,57 +828,62 @@ setInterval(updateAlertTicker, 3000);
     }
 
 function calculateRoute() {
-  const origin = document.getElementById("origin-input").value;
   const destination = document.getElementById("destination-input").value;
 
-  if (!origin || !destination) {
-    alert("請輸入出發地與目的地！");
+  if (!destination) {
+    alert("請輸入目的地！");
     return;
   }
 
-  const request = {
-    origin: origin,
-    destination: destination,
-    travelMode: google.maps.TravelMode.DRIVING,
-  };
+  if (!navigator.geolocation) {
+    alert("您的瀏覽器不支援 GPS 位置取得功能。");
+    return;
+  }
 
-  directionsService.route(request, (result, status) => {
-    if (status === "OK") {
-      directionsRenderer.setDirections(result);
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const userLocation = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      };
 
-      const leg = result.routes[0].legs[0];
-      const distanceText = leg.distance.text;
-      const durationText = leg.duration.text;
+      const request = {
+        origin: userLocation,
+        destination: destination,
+        travelMode: google.maps.TravelMode.DRIVING,
+      };
 
-      // 更新距離（去除「公里」文字）
-      document.getElementById("route-distance").textContent = distanceText.replace("公里", "");
+      directionsService.route(request, (result, status) => {
+        if (status === "OK") {
+          directionsRenderer.setDirections(result);
 
-      // 更新旅程時間（自動拆成「小時」與「分鐘」）
-      const durationMatch = durationText.match(/(\d+)\s*小時\s*(\d+)?\s*分鐘?/);
-      if (durationMatch) {
-        document.getElementById("route-duration-hours").textContent = durationText.replace("hours", "hrs");
-        // document.getElementById("route-duration-minutes").textContent = durationText.replace("min", "");
-        // document.getElementById("route-duration-hours").textContent = `${durationMatch[1]}`;
-        // document.getElementById("route-duration-minutes").textContent = `${durationMatch[2] || ''}`;
-      } else {
-        // 只有幾分鐘的情況
-        document.getElementById("route-duration-hours").textContent = durationText.replace("hours", "hrs");
-        // document.getElementById("route-duration-minutes").textContent = durationText.replace("min", "");
-        // document.getElementById("route-duration-hours").textContent = ``;
-        // document.getElementById("route-duration-minutes").textContent = durationText;
-      }
+          const leg = result.routes[0].legs[0];
+          const distanceText = leg.distance.text;
+          const durationText = leg.duration.text;
 
-      // 額外顯示在某個區域（如果你有 id="route-info"）
-      const infoDiv = document.getElementById("route-info");
-      if (infoDiv) {
-        infoDiv.innerHTML = `⏳ 預估時間：${durationText}，📍距離：${distanceText}`;
-      }
+          // 顯示距離
+          document.getElementById("route-distance").textContent = distanceText.replace("公里", "");
 
-    } else {
-      alert("無法規劃路線: " + status);
-      console.error("Google Maps Directions API 回傳錯誤：", status);
+          // 顯示預估時間
+          document.getElementById("route-duration-hours").textContent = durationText.replace("hours", "hrs");
+
+          // 額外顯示資訊
+          const infoDiv = document.getElementById("route-info");
+          if (infoDiv) {
+            infoDiv.innerHTML = `⏳ 預估時間：${durationText}，📍距離：${distanceText}`;
+          }
+
+        } else {
+          alert("無法規劃路線: " + status);
+          console.error("Google Maps Directions API 回傳錯誤：", status);
+        }
+      });
+    },
+    (error) => {
+      alert("無法取得目前位置，請確認瀏覽器已允許定位權限。");
+      console.error("定位失敗：", error);
     }
-  });
+  );
 }
 
     
@@ -896,6 +965,24 @@ function calculateRoute() {
         console.error('Error fetching data:', error);
       });
   }
+
+  let isWorking = true;
+
+  const toggleButton = document.getElementById('toggle-button');
+  const statusSpan = document.querySelector('.profile-status span');
+
+  toggleButton.addEventListener('click', () => {
+    isWorking = !isWorking;
+
+    if (isWorking) {
+      statusSpan.textContent = '活動中 - 執行中';
+      toggleButton.textContent = '下班';
+    } else {
+      statusSpan.textContent = '已下班';
+      toggleButton.textContent = '上班';
+    }
+  });
+
 
   // 更新歷史事件紀錄（只保留最新 5 筆）
   function fetchEvents() {
