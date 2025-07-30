@@ -4,13 +4,29 @@ import numpy as np
 import mediapipe as mp
 import time
 import math
-from collections import deque
-from datetime import datetime
+import threading
+import transforms3d
 import collections
 import argparse
+from collections import deque
+from datetime import datetime
+from mediapipe.python.solutions import face_mesh, drawing_utils, drawing_styles
 from flask import Flask, Response, jsonify, render_template
-import threading
-from flask_socketio import SocketIO
+from utils.face_geometry import (  
+    PCF,
+    get_metric_landmarks,
+    procrustes_landmark_basis,
+)
+from utils.drawing import Drawing
+from pylivelinkface import PyLiveLinkFace, FaceBlendShape
+
+
+
+# points of the face model that will be used for SolvePnP later
+points_idx = [33, 263, 61, 291, 199]
+points_idx = points_idx + [key for (key, val) in procrustes_landmark_basis]
+points_idx = list(set(points_idx))
+points_idx.sort()
 
 class AngleBuffer:
     def __init__(self, size=40):
@@ -132,6 +148,7 @@ class DMSSystem:
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5
         )
+        self.show_3d = False
         
         # 眼部關鍵點索引 (MediaPipe Face Mesh)
         
@@ -303,6 +320,45 @@ class DMSSystem:
 
         return pitch, yaw, roll
     
+    # https://github.com/JimWest/MeFaMo
+    def calculate_rotation(face_landmarks, pcf: PCF, image_shape):
+        frame_width, frame_height, channels = image_shape
+        focal_length = frame_width
+        center = (frame_width / 2, frame_height / 2)
+        camera_matrix = np.array(
+            [[focal_length, 0, center[0]], [0, focal_length, center[1]], [0, 0, 1]],
+            dtype="double",
+        )
+
+        dist_coeff = np.zeros((4, 1))
+
+        landmarks = np.array(
+            [(lm.x, lm.y, lm.z) for lm in face_landmarks.landmark[:468]]
+
+        )
+        # print(landmarks.shape)
+        landmarks = landmarks.T
+
+        metric_landmarks, pose_transform_mat = get_metric_landmarks(
+            landmarks.copy(), pcf
+        )
+
+        model_points = metric_landmarks[0:3, points_idx].T
+        image_points = (
+            landmarks[0:2, points_idx].T
+            * np.array([frame_width, frame_height])[None, :]
+        )
+
+        success, rotation_vector, translation_vector = cv.solvePnP(
+            model_points,
+            image_points,
+            camera_matrix,
+            dist_coeff,
+            flags=cv.SOLVEPNP_ITERATIVE,
+        )
+
+        return pose_transform_mat, metric_landmarks, rotation_vector, translation_vector
+    
     def normalize_pitch(self, pitch):
         """
         Normalize the pitch angle to be within the range of [-90, 90].
@@ -464,16 +520,6 @@ class DMSSystem:
 
         cv.line(image, p1, p2, (255, 0, 255), 3)
     
-        # 判斷頭部方向
-        # pose_status = "正常"
-        # if abs(y) > 20:
-        #     pose_status = "左轉" if y < 0 else "右轉"
-        #     self.add_alert(f"頭部{pose_status}", "warning")
-        # elif abs(x) > 15:
-        #     pose_status = "低頭" if x > 0 else "仰頭"
-        #     self.add_alert(f"頭部{pose_status}", "warning")
-        
-        # return pose_status
 
     def add_alert(self, message, level="info"):
         """添加警報"""
@@ -629,7 +675,7 @@ class DMSSystem:
         rgb_image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
         img_h, img_w = image.shape[:2]
         results = self.face_mesh.process(rgb_image)
-        
+        face_image_3d = None
         if results.multi_face_landmarks:
             # for face_landmarks in results.multi_face_landmarks:
                 # ... (landmark processing)
@@ -646,7 +692,61 @@ class DMSSystem:
                 ear_left = self.blinking_ratio(self.mesh_points_3d)
                 ear_right = ear_left # blinking_ratio calculates for both eyes
                 self.avg_ear = self.analyze_fatigue(ear_left, ear_right)
+                #virtual 3d points
+              
+                for face_landmarks in results.multi_face_landmarks:
+                    pose_transform_mat, metric_landmarks, rotation_vector, translation_vector = self.calculate_rotation(face_landmarks, self.pcf, image.shape)  
+                    if self.show_3d:
+                        face_image_3d = Drawing.draw_3d_face(metric_landmarks, image)
+
+                    # draw the face mesh 
+                    drawing_utils.draw_landmarks(
+                        image=image,
+                        landmark_list=face_landmarks,
+                        connections=face_mesh.FACEMESH_TESSELATION,
+                        landmark_drawing_spec=None,
+                        connection_drawing_spec=drawing_styles
+                        .get_default_face_mesh_tesselation_style())
+
+                    # draw the face contours
+                    drawing_utils.draw_landmarks(
+                        image=image,
+                        landmark_list=face_landmarks,
+                        connections=face_mesh.FACEMESH_CONTOURS,
+                        landmark_drawing_spec=None,
+                        connection_drawing_spec=drawing_styles
+                        .get_default_face_mesh_contours_style())
                 
+                    # draw iris points
+                    image = Drawing.draw_landmark_point(face_landmarks.landmark[468], image, color = (0, 0, 255))
+                    image = Drawing.draw_landmark_point(face_landmarks.landmark[473], image, color = (0, 255, 0))
+
+                    # calculate and set all the blendshapes                
+                    self.blendshape_calulator.calculate_blendshapes(
+                        self.live_link_face, metric_landmarks[0:3].T, face_landmarks.landmark)
+
+                    # calculate the head rotation out of the pose matrix
+                    eulerAngles = transforms3d.euler.mat2euler(pose_transform_mat)
+                    pitch = -eulerAngles[0]
+                    yaw = eulerAngles[1]
+                    roll = eulerAngles[2]
+                    self.live_link_face.set_blendshape(
+                        FaceBlendShape.HeadPitch, pitch)
+                    self.live_link_face.set_blendshape(
+                        FaceBlendShape.HeadRoll, roll)
+                    self.live_link_face.set_blendshape(FaceBlendShape.HeadYaw, yaw)
+
+                    # Flip the image horizontally for a selfie-view display.
+                    self.image = cv.flip(image, 1).astype('uint8')
+
+                    # Debug format settings
+                    white_bg = 0 * np.ones(shape=[720, 720, 3], dtype=np.uint8)
+                    text_coordinates = [25, 25]
+                    font = cv.FONT_HERSHEY_SIMPLEX
+                    font_scale = 0.50
+                    color = (0, 255, 0)
+                    thickness = 1
+
                 # 計算頭部姿態
                 pitch, yaw, roll = self.calculate_head_pose(self.mesh_points, (img_h, img_w))
                 self.angle_buffer.add([pitch, yaw, roll])
