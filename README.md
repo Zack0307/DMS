@@ -15,12 +15,10 @@ Test computer and System:
 To install it, clone the git repo and install it with the setup.py file:
 ```
 python setup.py install
-
 ```
 "Clone This repo file install "
 ```
 python install -r requirements.txt
-
 ```
 
 
