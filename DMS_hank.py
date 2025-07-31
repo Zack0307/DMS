@@ -857,6 +857,11 @@ def index():
 def video_feed():
     return Response(dms.run(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
+#3d face_landmark
+@app.route('/landmark_feed')
+def landmark_feed():
+    return Response(dms.run(),mimetype='multipart/x-mixed-replace; boundary=frame')
+
 # 資料 API 路由
 @app.route('/data')
 def data():
