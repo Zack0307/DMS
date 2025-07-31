@@ -148,7 +148,7 @@ class DMSSystem:
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5
         )
-        self.show_3d = False
+        self.show_3d = True
         
         # 眼部關鍵點索引 (MediaPipe Face Mesh)
         
