@@ -3,11 +3,9 @@ import cv2 as cv
 import numpy as np
 import mediapipe as mp
 import time
-import math
 import threading
 import transforms3d
 import collections
-import argparse
 from collections import deque
 from datetime import datetime
 from mediapipe.python.solutions import face_mesh, drawing_utils, drawing_styles
