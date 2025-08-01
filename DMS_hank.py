@@ -17,6 +17,7 @@ from utils.face_geometry import (
 )
 from utils.drawing import Drawing
 from pylivelinkface import PyLiveLinkFace, FaceBlendShape
+from utils.blendshape_calculator import BlendshapeCalculator
 
 
 
@@ -184,6 +185,10 @@ class DMSSystem:
         
         # 攝影機
         self.cap = None
+        self.pcf = PCF()
+        self.blendshape_calulator = BlendshapeCalculator()
+        self.live_link_face = PyLiveLinkFace(fps = 10, filter_size = 4)
+
 
     def euclidean_distance_3D(self, points):
         """Calculates the Euclidean distance between two points in 3D space.
@@ -319,7 +324,7 @@ class DMSSystem:
         return pitch, yaw, roll
     
     # https://github.com/JimWest/MeFaMo
-    def calculate_rotation(face_landmarks, pcf: PCF, image_shape):
+    def calculate_rotation(self, face_landmarks, pcf: PCF, image_shape):
         frame_width, frame_height, channels = image_shape
         focal_length = frame_width
         center = (frame_width / 2, frame_height / 2)
@@ -693,7 +698,7 @@ class DMSSystem:
                 #virtual 3d points
               
                 for face_landmarks in results.multi_face_landmarks:
-                    pose_transform_mat, metric_landmarks, rotation_vector, translation_vector = self.calculate_rotation(face_landmarks, self.pcf, image.shape)  
+                    pose_transform_mat, metric_landmarks, rotation_vector, translation_vector = self.calculate_rotation(face_landmarks, self.pcf, rgb_image.shape)  
                     if self.show_3d:
                         face_image_3d = Drawing.draw_3d_face(metric_landmarks, image)
 
