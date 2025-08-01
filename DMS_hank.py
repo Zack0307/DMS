@@ -191,8 +191,8 @@ class DMSSystem:
         self.live_link_face = PyLiveLinkFace(fps = 10, filter_size = 4)
         self.outputFrame = None
         self.running = True
-        thread = threading.Thread(target=self.camera_thread)
-        thread.daemon = True
+        thread = threading.Thread(target=self.camera_thread, daemon=True)
+        # thread.daemon = True
         thread.start()
 
 
@@ -791,29 +791,14 @@ class DMSSystem:
             self.last_fps_time = current_time
 
     def run_2d(self):
-        # """運行DMS系統並產生2D影像串流"""
-        # self.cap = cv.VideoCapture(camera_id)
-
-        # if not self.cap.isOpened():
-        #     print("錯誤：無法打開攝影機")
-        #     return
-
-        # self.cap.set(cv.CAP_PROP_FRAME_WIDTH, 1280)
-        # self.cap.set(cv.CAP_PROP_FRAME_HEIGHT, 720)
-        # self.cap.set(cv.CAP_PROP_FPS, 30)
-
-        # self.is_running = True
-        # self.start_time = time.time()
-        # self.add_alert("DMS系統啟動", "info")
-
-        # print("DMS系統運行中...")
-
+        """2D_video流生成器"""
         try:
             while self.is_running:
                 key = cv.waitKey(1) & 0xFF
                 with self.data_lock:
                     if self.outputFrame is None:
                         time.sleep(0.05)
+                        print("2d video running")
                         continue
                     frame = self.outputFrame.copy()
 
@@ -847,21 +832,7 @@ class DMSSystem:
             self.cleanup()
 
     def run_3d(self):
-        # """運行DMS系統並產生3D影像串流"""
-        # self.cap = cv.VideoCapture(camera_id)
-
-        # if not self.cap.isOpened():
-        #     print("錯誤:無法打開3d攝影機")
-        #     return
-
-        # self.cap.set(cv.CAP_PROP_FRAME_WIDTH, 1280)
-        # self.cap.set(cv.CAP_PROP_FRAME_HEIGHT, 720)
-        # self.cap.set(cv.CAP_PROP_FPS, 30)
-
-        # self.is_running = True
-        # self.start_time = time.time()
-        # self.add_alert("3D video Start", "info")
-
+        """3D_video流生成器"""
         try:
             while self.is_running:
                 key = cv.waitKey(1) & 0xFF
