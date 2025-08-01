@@ -790,7 +790,7 @@ class DMSSystem:
             self.frame_count = 0
             self.last_fps_time = current_time
 
-    def run_2d(self, camera_id=DEFAULT_WEBCAM):
+    def run_2d(self):
         # """運行DMS系統並產生2D影像串流"""
         # self.cap = cv.VideoCapture(camera_id)
 
