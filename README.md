@@ -21,6 +21,10 @@ python setup.py install
 python install -r requirements.txt
 ```
 
+### TODO
+
+  [] YOLO-V8 TTS
+  (website:https://github.com/anugraheeth/Real-Time-Object-Detection-with-YOLOv8-and-Audio-Feedback)
 
 ### Acknowledgement
 
