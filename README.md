@@ -27,6 +27,8 @@ python install -r requirements.txt
   <br>
   (website:https://github.com/anugraheeth/Real-Time-Object-Detection-with-YOLOv8-and-Audio-Feedback)
   </br>
+  [ ] 新增聊天機器人-基本資訊(即時狀態、狀態查詢、歷史紀錄、改善建議)
+
 
 ### Acknowledgement
 
