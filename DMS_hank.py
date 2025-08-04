@@ -173,7 +173,7 @@ class DMSSystem:
         self.angle_buffer = AngleBuffer(size=MOVING_AVERAGE_WINDOW)
         
         # 系統狀態
-        self.is_running = False
+        # self.is_running = False
         self.start_time = None
         self.frame_count = 0
         self.fps = 0
@@ -793,12 +793,12 @@ class DMSSystem:
     def run_2d(self):
         """2D_video流生成器"""
         try:
-            while self.is_running:
+            while self.running:
                 key = cv.waitKey(1) & 0xFF
                 with self.data_lock:
                     if self.outputFrame is None:
                         time.sleep(0.05)
-                        print("2d video running")
+                        # print("2d video running")
                         continue
                     frame = self.outputFrame.copy()
 
@@ -834,11 +834,12 @@ class DMSSystem:
     def run_3d(self):
         """3D_video流生成器"""
         try:
-            while self.is_running:
+            while self.running:
                 key = cv.waitKey(1) & 0xFF
                 with self.data_lock:
                     if self.outputFrame is None:
                         time.sleep(0.05)
+                        print("3d video running")
                         continue
                     frame = self.outputFrame.copy()
 
@@ -885,13 +886,13 @@ class DMSSystem:
 
     def cleanup(self):
         """清理資源"""
-        self.is_running = False
+        self.running == False
         cv.destroyAllWindows()
         print("DMS系統已關閉")
 
     def camera_thread(self):
         cap = cv.VideoCapture(DEFAULT_WEBCAM)
-        while self.running:
+        while self.running: #True
             ret, frame = cap.read()
             if not ret:
                 continue
