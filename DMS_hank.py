@@ -814,6 +814,7 @@ class DMSSystem:
                     break
 
                 processed_frame = self.process_frame(frame)
+                # processed_frame = self.face_landmark_to_3d(frame)
                 self.calculate_fps()
 
                 # 將影像編碼為 JPEG
