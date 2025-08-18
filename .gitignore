@@ -8,5 +8,6 @@ fatigue.py
 gaze.py
 gemini.py
 DMS_claude.py
+gemini_chatbot.py
 .vscode
 logs

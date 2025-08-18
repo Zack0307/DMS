@@ -629,12 +629,107 @@
 #toggle-button:hover {
   background-color: #009e78;
 }
+body {
+    font-family: 'Segoe UI', sans-serif;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
 
+  body.dark-theme {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+  }
+
+  body.light-theme {
+    background-color: #dbeafe;
+    color: #1a1a1a;
+  }
+
+  .light-theme .dashboard,
+  .light-theme .left-sidebar,
+  .light-theme .center-content,
+  .light-theme .right-sidebar,
+  .light-theme .metrics-panel,
+  .light-theme .video-feed,
+  .light-theme .bottom-metrics,
+  .light-theme .metric-card,
+  .light-theme .alert-ticker,
+  .light-theme .driver-profile {
+    background-color: #ffffff;
+    color: #1a1a1a;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .theme-toggle, .toggle-chat {
+    position: fixed;
+    top: 20px;
+    font-size: 1.5rem;
+    border: none;
+    background: transparent;
+    z-index: 999;
+  }
+
+  .theme-toggle {
+    right: 60px;
+    color: #facc15;
+  }
+
+  .toggle-chat {
+    right: 20px;
+    color: #22d3ee;
+  }
+
+  .chat-container {
+    display: none;
+    flex-direction: column;
+    background: #1f2937;
+    color: white;
+    padding: 20px;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .light-theme .chat-container {
+    background: #ffffff;
+    color: #1a1a1a;
+  }
+
+  .chat-box {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 10px;
+  }
+
+  .chat-input {
+    display: flex;
+    gap: 10px;
+  }
+
+  .chat-input input {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+
+  .chat-input button {
+    padding: 8px 16px;
+    border: none;
+    background-color: #14b8a6;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+  }
 </style>
 
 </head>
 <body class="dark-theme">
   <div class="dashboard">
+    
     <!-- Header -->
     <div class="dashboard-header">
       <h1 class="dashboard-title">駕駛監控系統</h1>
@@ -755,64 +850,136 @@ setInterval(updateAlertTicker, 3000);
 
     <!-- ⬇️ 包住影像與 avatar 的 container -->
     <div class="video-container">
-      <img src="http://127.0.0.1:5000/video_feed" width="100%" height="100%" alt="Live Video">
+  <!-- 主畫面 (2D Video) -->
+  <img src="{{ url_for('video_feed') }}" width="100%" height="100%" alt="Live Video">
+  
+</div>
+  </div>
+</div>
 
-      <!-- ✅ Avatar 視窗放在這裡才會正確定位 -->
-      <div class="vtuber-window">
-        <img src="/landmark_feed" width="100%" height="100%">
-        <img id="avatar-img" src="http://127.0.0.1:5000/landmark_feed" alt="3d landmark">
+<!-- 右側邊欄切換容器 -->
+<div id="rightPanel">
+  <div class="right-sidebar" id="sidebarContent">
+    <div class="bottom-metrics">
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <h5>今天的違規</h5>
+          <span class="value" id="violation-count">3</span>
+        </div>
+        <div class="metric-card">
+          <h5>警報分數</h5>
+          <span class="value">85</span><span class="unit">%</span>
+        </div>
+        <div class="metric-card">
+          <h5>旅程時間</h5>
+          <span class="value" id="route-duration-hours">--</span><span class="value"></span>
+        </div>
+        <div class="metric-card">
+          <h5>距離</h5>
+          <span class="value" id="route-distance">--</span><span class="unit"></span>
+        </div>
       </div>
+
+      <!-- 預估抵達資訊 -->
+      <div class="metric-card">
+        <h5>預估抵達資訊</h5>
+        <div id="map" style="margin-bottom: 12px; height: 250px;"></div>
+        <input id="destination-input" type="text" placeholder="輸入目的地"
+          style="padding: 8px; width: 90%; border-radius: 6px; margin-bottom: 10px;">
+        <button onclick="calculateRoute()" style="
+          padding: 8px 16px;
+          border-radius: 6px;
+          background-color: #14b8a6;
+          color: white;
+          border: none;
+          width: 100%;
+        ">開始導航</button>
+      </div>
+    </div>
+  </div>
+  <div class="historical-logs">
+            <h5 class="logs-title">歷史紀錄</h5>
+            <div style="max-height: 250px; overflow-y: auto;"> <table id="eventTable" border="0" cellspacing="0" cellpadding="4" style="width:100%;">
+                    <thead>
+                        <tr style="background-color: #3a3a3a;">
+                            <th style="text-align: left; padding: 8px;">時間</th>
+                            <th style="text-align: left; padding: 8px;">事件</th>
+                            <th style="text-align: left; padding: 8px;">狀態</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+  <div class="chat-container" id="chatContainer" style="display: none;">
+    <h2>交通寶</h2>
+    <div class="chat-box" id="chatBox" style="flex: 1; overflow-y: auto; margin-bottom: 12px; padding: 10px; background: #f1f5f9; border-radius: 8px; max-height: 300px;"></div>
+    <div class="chat-input" style="display: flex; gap: 8px;">
+      <input type="text" id="userInput" placeholder="輸入您的訊息..." style="flex: 1; padding: 8px; border-radius: 6px;">
+      <button onclick="sendMessage()" style="padding: 8px 16px; border-radius: 6px; background-color: #14b8a6; color: white; border: none;">送出</button>
     </div>
   </div>
 </div>
 
-<!-- 右側邊欄 -->
-<div class="right-sidebar">
-  <div class="bottom-metrics">
-    <div class="metrics-grid">
-      <div class="metric-card">
-        <h5>今天的違規</h5>
-        <span class="value" id="violation-count">3</span>
-      </div>
-      <div class="metric-card">
-        <h5>警報分數</h5>
-        <span class="value">85</span><span class="unit">%</span>
-      </div>
-      <div class="metric-card">
-        <h5>旅程時間</h5>
-            <span class="value" id="route-duration-hours">--</span><span class="value"></span>
-            <!-- <span class="unit" id="route-duration-minutes">--</span><span class="unit"></span> -->
-      </div>
-      <div class="metric-card">
-        <h5>距離</h5>
-        <span class="value" id="route-distance">--</span><span class="unit"></span>
-      </div>
-    </div>
-
-    <!-- 預估抵達資訊 -->
-    <div class="metric-card">
-      <h5>預估抵達資訊</h5>
-      <div id="map" style="margin-bottom: 12px; height: 250px;"></div>
-
-      <!-- ✅ 移除出發地輸入欄，只保留目的地 -->
-      <input id="destination-input" type="text" placeholder="輸入目的地"
-        style="padding: 8px; width: 90%; border-radius: 6px; margin-bottom: 10px;">
-
-      <button onclick="calculateRoute()" style="
-        padding: 8px 16px;
-        border-radius: 6px;
-        background-color: #14b8a6;
-        color: white;
-        border: none;
-        width: 100%;
-      ">開始導航</button>
-    </div>
-
-
+<!-- 切換按鈕 -->
+<button class="toggle-chat" onclick="toggleRightPanel()" style="
+  position: fixed;
+  top: 80px;        /* 👉 改為靠近上方但不重疊主題按鈕 */
+  right: 20px;
+  z-index: 1000;
+  font-size: 1.5rem;
+  border: none;
+  background-color: #14b8a6;
+  color: white;
+  padding: 10px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+">💬</button>
 
 </head>
 
   <script>
+    function toggleRightPanel() {
+  const chat = document.getElementById('chatContainer');
+  const sidebar = document.getElementById('sidebarContent');
+  if (chat.style.display === 'none') {
+    chat.style.display = 'flex';
+    sidebar.style.display = 'none';
+  } else {
+    chat.style.display = 'none';
+    sidebar.style.display = 'block';
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById("userInput").value.trim();
+  if (!input) return;
+
+  const chatBox = document.getElementById("chatBox");
+  chatBox.innerHTML += `<p><strong>你：</strong> ${input}</p>`;
+
+  document.getElementById("userInput").value = "";
+
+  try {
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyDofMFyl2RgjGNd_h7qOWD-hv1-sls0gJs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: input }] }]
+      })
+    });
+
+    const data = await res.json();
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "無法取得回覆";
+    chatBox.innerHTML += `<p><strong>Gemini：</strong> ${reply}</p>`;
+  } catch (error) {
+    chatBox.innerHTML += `<p><strong>Gemini：</strong> 無法取得回覆</p>`;
+    console.error("Gemini API 錯誤：", error);
+  }
+}
+
+
     let map, directionsService, directionsRenderer;
 
     function initMap() {
@@ -866,7 +1033,7 @@ function calculateRoute() {
           document.getElementById("route-distance").textContent = distanceText.replace("公里", "");
 
           // 顯示預估時間
-          document.getElementById("route-duration-hours").textContent = durationText.replace("hours", "hrs");
+          document.getElementById("route-duration-hours").textContent = durationText;
 
           // 額外顯示資訊
           const infoDiv = document.getElementById("route-info");
@@ -896,22 +1063,6 @@ function calculateRoute() {
 </script>
   </script>
 </body>
-<!-- 歷史紀錄表格 -->
-  <div class="historical-logs">
-            <h5 class="logs-title">歷史紀錄</h5>
-            <div style="max-height: 250px; overflow-y: auto;"> <table id="eventTable" border="0" cellspacing="0" cellpadding="4" style="width:100%;">
-                    <thead>
-                        <tr style="background-color: #3a3a3a;">
-                            <th style="text-align: left; padding: 8px;">時間</th>
-                            <th style="text-align: left; padding: 8px;">事件</th>
-                            <th style="text-align: left; padding: 8px;">狀態</th>
-                        </tr>
-                    </thead>
-                    <tbody id="eventTableBody">
-                        </tbody>
-                </table>
-            </div>
-        </div>
 <!-- 警報跑馬燈 
  <div id="alert" class="alert-marquee">⚠️ 正在監控駕駛狀態...</div>
  -->

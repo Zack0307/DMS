@@ -1,4 +1,3 @@
-
 import cv2 as cv
 import numpy as np
 import mediapipe as mp
@@ -127,7 +126,6 @@ MOUTH_POINTS = [0, 17, 78, 191, 80, 81, 82, 13, 312, 311, 310, 415, 308, 324, 31
 # Face Selected points indices for Head Pose Estimation
 _indices_pose = [1, 33, 61, 199, 263, 291]
 
-
 class DMSSystem:
     def __init__(self, socketio=None):
         # ... (rest of the __init__ method)
@@ -185,15 +183,14 @@ class DMSSystem:
         self.alert_cooldown = 3  # 秒
         
         # 攝影機 3d video
-        # self.cap = None
         self.pcf = PCF()
         self.blendshape_calulator = BlendshapeCalculator()
         self.live_link_face = PyLiveLinkFace(fps = 10, filter_size = 4)
         self.outputFrame = None
         self.running = True
-        thread = threading.Thread(target=self.camera_thread, daemon=True)
-        # thread.daemon = True
-        thread.start()
+        # thread = threading.Thread(target=self.camera_thread, daemon=True)
+        # # thread.daemon = True
+        # thread.start()
 
 
     def euclidean_distance_3D(self, points):
@@ -790,32 +787,34 @@ class DMSSystem:
             self.frame_count = 0
             self.last_fps_time = current_time
 
-    def run_2d(self):
-        """2D_video流生成器"""
+    def run_2d(self, camera_id=DEFAULT_WEBCAM):
+        """運行DMS系統並產生2D影像串流"""
+        self.cap = cv.VideoCapture(camera_id)
+
+        if not self.cap.isOpened():
+            print("錯誤：無法打開攝影機")
+            return
+
+        self.cap.set(cv.CAP_PROP_FRAME_WIDTH, 1280)
+        self.cap.set(cv.CAP_PROP_FRAME_HEIGHT, 720)
+        self.cap.set(cv.CAP_PROP_FPS, 30)
+
+        self.is_running = True
+        self.start_time = time.time()
+        self.add_alert("DMS系統啟動", "info")
+
+        print("DMS系統運行中...")
+        
         try:
-            while self.running:
+            while self.is_running:
+                ret, frame = self.cap.read()
                 key = cv.waitKey(1) & 0xFF
-                with self.data_lock:
-                    if self.outputFrame is None:
-                        time.sleep(0.05)
-                        # print("2d video running")
-                        continue
-                    frame = self.outputFrame.copy()
+                if not ret:
+                    print("錯誤：無法讀取攝影機畫面")
+                    break
 
                 processed_frame = self.process_frame(frame)
                 self.calculate_fps()
-                #exit
-                if key == ord('q'):
-                    if PRINT_DATA:
-                        print("Exiting program...")
-                    break
-                #Recording
-                if key == ord('r'):
-                    IS_RECORDING = not IS_RECORDING
-                    if IS_RECORDING:
-                        print("Recording started.")
-                    else:
-                        print("Recording paused.")
 
                 # 將影像編碼為 JPEG
                 (flag, encodedImage) = cv.imencode(".jpg", processed_frame)
@@ -831,49 +830,7 @@ class DMSSystem:
         finally:
             self.cleanup()
 
-    def run_3d(self):
-        """3D_video流生成器"""
-        try:
-            while self.running:
-                key = cv.waitKey(1) & 0xFF
-                with self.data_lock:
-                    if self.outputFrame is None:
-                        time.sleep(0.05)
-                        print("3d video running")
-                        continue
-                    frame = self.outputFrame.copy()
-
-
-                face_landmark_frame = self.face_landmark_to_3d(frame)
-                self.calculate_fps()
-                #exit
-                if key == ord('q'):
-                    if PRINT_DATA:
-                        print("Exiting program...")
-                    break
-                #Recording
-                if key == ord('r'):
-                    IS_RECORDING = not IS_RECORDING
-                    if IS_RECORDING:
-                        print("Recording started.")
-                    else:
-                        print("Recording paused.")
-
-                # 將影像編碼為 JPEG
-                (flag, encodedImage) = cv.imencode(".jpg", face_landmark_frame)
-                if not flag:
-                    continue
-
-                # 產生影像串流
-                yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' +
-                    bytearray(encodedImage) + b'\r\n')
-
-        except GeneratorExit:
-            print("Streaming client disconnected.")
-        finally:
-            self.cleanup()
-
-    def reset_stats(self):
+    def reset_status(self):
         """重置統計數據"""
         self.fatigue_score = 0
         self.attention_score = 100
@@ -886,25 +843,17 @@ class DMSSystem:
 
     def cleanup(self):
         """清理資源"""
-        self.running == False
+        self.running = False
+        if self.cap:
+            self.cap.release()
         cv.destroyAllWindows()
         print("DMS系統已關閉")
 
-    def camera_thread(self):
-        cap = cv.VideoCapture(DEFAULT_WEBCAM)
-        while self.running: #True
-            ret, frame = cap.read()
-            if not ret:
-                continue
-            with self.data_lock:
-                self.outputFrame = frame.copy()
-        cap.release()
 
 dms = DMSSystem()
 
 app = Flask(__name__, template_folder='templates', static_folder='static') # 指定 template_folder 和 static_folder
 dms.run_2d()  # 啟動 DMS 2d 系統
-dms.run_3d()  # 啟動 DMS 3d 系統
 # 首頁路由，用於提供 HTML 儀表板
 @app.route('/')
 def index():
@@ -914,11 +863,6 @@ def index():
 @app.route('/video_feed')
 def video_feed():
     return Response(dms.run_2d(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-#3d face_landmark
-@app.route('/landmark_feed')
-def landmark_feed():
-    return Response(dms.run_3d(),mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # 資料 API 路由
 @app.route('/data')
@@ -935,9 +879,9 @@ def data():
         })
 
 # 重置統計數據的 API 路由
-@app.route('/reset_stats', methods=['POST'])
-def reset_stats():
-    dms.reset_stats()
+@app.route('/reset_status', methods=['POST'])
+def reset_status():
+    dms.reset_status()
     return jsonify({"status": "success", "message": "統計數據已重置"})
 
 if __name__ == '__main__':
