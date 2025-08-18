@@ -127,22 +127,29 @@ MOUTH_POINTS = [0, 17, 78, 191, 80, 81, 82, 13, 312, 311, 310, 415, 308, 324, 31
 _indices_pose = [1, 33, 61, 199, 263, 291]
 
 class DMSSystem:
-    def __init__(self, socketio=None):
+    def __init__(self):
         # ... (rest of the __init__ method)
         self.head_pose = "N/A"
         self.avg_ear = 0.0
         self.data_lock = threading.Lock()
-        self.socketio = socketio # Save socketio instance
         self.data_queue = deque(maxlen=1) # Buffer for the latest data
 
         # MediaPipe 初始化
         self.mp_face_mesh = mp.solutions.face_mesh
+        self.mp_hand_mesh = mp.solutions.hands
         self.mp_drawing = mp.solutions.drawing_utils
         self.mp_drawing_styles = mp.solutions.drawing_styles
         
         self.face_mesh = self.mp_face_mesh.FaceMesh(
+            static_image_mode=False,
             max_num_faces=1,
             refine_landmarks=True,
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5
+        )
+        self.hand_mesh = self.mp_hand_mesh.Hands(
+            static_image_mode=False,
+            max_num_hands=2,
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5
         )
@@ -705,22 +712,9 @@ class DMSSystem:
                 pitch, yaw, roll = self.angle_buffer.get_average()
                 self.head_pose = self.analyze_head_pose(image, img_w, img_h, self.nose_3d_points, self.nose_2d_points)
 
-        else:
-            self.add_alert("未檢測到駕駛員", "warning")
-        
-        return image
-    
-    def face_landmark_to_3d(self, image):
-        #virtual 3d points
-        image_2d = cv.cvtColor(image, cv.COLOR_BGR2RGB)
-        # img_h, img_w = image_2d.shape[:2]
-        results = self.face_mesh.process(image_2d)
-        face_image_3d = None
-        if results.multi_face_landmarks:
-
-            with self.data_lock:
+                #mediapipe landmark
                 for face_landmarks in results.multi_face_landmarks:
-                            pose_transform_mat, metric_landmarks, rotation_vector, translation_vector = self.calculate_rotation(face_landmarks, self.pcf, image_2d.shape)  
+                            pose_transform_mat, metric_landmarks, rotation_vector, translation_vector = self.calculate_rotation(face_landmarks, self.pcf, rgb_image.shape)  
                             if self.show_3d:
                                 face_image_3d = Drawing.draw_3d_face(metric_landmarks, image)
 
@@ -744,7 +738,7 @@ class DMSSystem:
                         
                             # draw iris points
                             image = Drawing.draw_landmark_point(face_landmarks.landmark[468], image, color = (0, 0, 255))
-                            image = Drawing.draw_landmark_point(face_landmarks.landmark[473], image, color = (0, 255, 0))
+                            # image = Drawing.draw_landmark_point(face_landmarks.landmark[473], image, color = (0, 255, 0))
 
                             # calculate and set all the blendshapes                
                             self.blendshape_calulator.calculate_blendshapes(
@@ -764,18 +758,80 @@ class DMSSystem:
                             # Flip the image horizontally for a selfie-view display.
                             self.image = cv.flip(image, 1).astype('uint8')
 
-                            # Debug format settings
-                            white_bg = 0 * np.ones(shape=[720, 720, 3], dtype=np.uint8)
-                            text_coordinates = [25, 25]
-                            font = cv.FONT_HERSHEY_SIMPLEX
-                            font_scale = 0.50
-                            color = (0, 255, 0)
-                            thickness = 1
 
-                else:
-                    self.add_alert("未檢測到駕駛員", "warning")
 
-                return image
+        else:
+            self.add_alert("未檢測到駕駛員", "warning")
+        
+        return image
+    
+    # def face_landmark_to_3d(self, image):
+    #     #virtual 3d points
+    #     image_2d = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+    #     # img_h, img_w = image_2d.shape[:2]
+    #     results = self.face_mesh.process(image_2d)
+    #     output = np.zeros((480,320,3), dtype='uint8')
+    #     face_image_3d = None
+    #     if results.multi_face_landmarks:
+
+    #         with self.data_lock:
+    #             for face_landmarks in results.multi_face_landmarks:
+    #                         pose_transform_mat, metric_landmarks, rotation_vector, translation_vector = self.calculate_rotation(face_landmarks, self.pcf, image_2d.shape)  
+    #                         if self.show_3d:
+    #                             face_image_3d = Drawing.draw_3d_face(metric_landmarks, image)
+
+    #                         # draw the face mesh 
+    #                         drawing_utils.draw_landmarks(
+    #                             image=image,
+    #                             landmark_list=face_landmarks,
+    #                             connections=face_mesh.FACEMESH_TESSELATION,
+    #                             landmark_drawing_spec=None,
+    #                             connection_drawing_spec=drawing_styles
+    #                             .get_default_face_mesh_tesselation_style())
+
+    #                         # draw the face contours
+    #                         drawing_utils.draw_landmarks(
+    #                             image=image,
+    #                             landmark_list=face_landmarks,
+    #                             connections=face_mesh.FACEMESH_CONTOURS,
+    #                             landmark_drawing_spec=None,
+    #                             connection_drawing_spec=drawing_styles
+    #                             .get_default_face_mesh_contours_style())
+                        
+    #                         # draw iris points
+    #                         image = Drawing.draw_landmark_point(face_landmarks.landmark[468], image, color = (0, 0, 255))
+    #                         # image = Drawing.draw_landmark_point(face_landmarks.landmark[473], image, color = (0, 255, 0))
+
+    #                         # calculate and set all the blendshapes                
+    #                         self.blendshape_calulator.calculate_blendshapes(
+    #                             self.live_link_face, metric_landmarks[0:3].T, face_landmarks.landmark)
+
+    #                         # calculate the head rotation out of the pose matrix
+    #                         eulerAngles = transforms3d.euler.mat2euler(pose_transform_mat)
+    #                         pitch = -eulerAngles[0]
+    #                         yaw = eulerAngles[1]
+    #                         roll = eulerAngles[2]
+    #                         self.live_link_face.set_blendshape(
+    #                             FaceBlendShape.HeadPitch, pitch)
+    #                         self.live_link_face.set_blendshape(
+    #                             FaceBlendShape.HeadRoll, roll)
+    #                         self.live_link_face.set_blendshape(FaceBlendShape.HeadYaw, yaw)
+
+    #                         # Flip the image horizontally for a selfie-view display.
+    #                         self.image = cv.flip(image, 1).astype('uint8')
+
+    #                         # Debug format settings
+    #                         white_bg = 0 * np.ones(shape=[720, 720, 3], dtype=np.uint8)
+    #                         text_coordinates = [25, 25]
+    #                         font = cv.FONT_HERSHEY_SIMPLEX
+    #                         font_scale = 0.50
+    #                         color = (0, 255, 0)
+    #                         thickness = 1
+
+    #             else:
+    #                 self.add_alert("未檢測到駕駛員", "warning")
+
+    #             return image
 
     def calculate_fps(self):
         """計算FPS"""
@@ -815,16 +871,19 @@ class DMSSystem:
 
                 processed_frame = self.process_frame(frame)
                 # processed_frame = self.face_landmark_to_3d(frame)
-                self.calculate_fps()
+                # self.calculate_fps()
 
                 # 將影像編碼為 JPEG
                 (flag, encodedImage) = cv.imencode(".jpg", processed_frame)
+                mjpeg = encodedImage.tobytes()
                 if not flag:
                     continue
 
                 # 產生影像串流
-                yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' +
-                    bytearray(encodedImage) + b'\r\n')
+                yield(b'--frame\r\n' 
+                      b'Content-Type: image/jpeg\r\n\r\n' + 
+                      mjpeg +
+                      b'\r\n')
 
         except GeneratorExit:
             print("Streaming client disconnected.")
@@ -890,4 +949,4 @@ if __name__ == '__main__':
     # 這裡 dms.run() 是作為生成器被調用，它會在請求時啟動攝像頭
     # 如果您需要DMS在應用啟動時就開始運行，可能需要單獨線程來管理
     # 但對於視頻流，這種請求時啟動的方式通常是OK的。
-    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True) # 使用 threaded=True 允許並發請求
+    app.run(host='0.0.0.0', port=5000, debug=None, threaded=True) # 使用 threaded=True 允許並發請求
