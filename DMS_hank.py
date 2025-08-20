@@ -32,6 +32,10 @@ points_idx = points_idx + [key for (key, val) in procrustes_landmark_basis]
 points_idx = list(set(points_idx))
 points_idx.sort()
 
+#API key
+client = genai.Client(api_key=API_KEY)
+
+
 class AngleBuffer:
     def __init__(self, size=40):
         self.size = size
@@ -763,14 +767,14 @@ class DMSSystem:
 
                 # 將影像編碼為 JPEG
                 (flag, encodedImage) = cv.imencode(".jpg", processed_frame)
-                mjpeg = encodedImage.tobytes()
+                frame = encodedImage.tobytes()
                 if not flag:
                     continue
 
                 # 產生影像串流
                 yield(b'--frame\r\n' 
                       b'Content-Type: image/jpeg\r\n\r\n' + 
-                      mjpeg +
+                      frame +
                       b'\r\n')
 
         except GeneratorExit:
@@ -783,7 +787,8 @@ class DMSSystem:
         self.fatigue_score = 0
         self.attention_score = 100
         self.blink_count = 0
-        self.ear_counter = 0
+        self.avg_ear = 0
+        self.yawn_count = 0
         self.ear_history.clear()
         self.head_pose_history.clear()
         self.alerts.clear()
@@ -796,55 +801,6 @@ class DMSSystem:
             self.cap.release()
         cv.destroyAllWindows()
         print("DMS系統已關閉")
-
-    def chat(user_message, conversation_history=[]):
-        try:
-            client = genai.Client(api_key=API_KEY)
-
-            model = "gemini-2.5-flash"
-            
-            #conversation_history
-            contents = []
-
-            # 加入對話歷史
-            for msg in conversation_history:
-                contents.append(
-                    types.Content(
-                        role=msg["role"],
-                        parts=[types.Part.from_text(text=msg["content"])]
-                    )
-                )
-            # 加入當前用戶訊息
-            contents.append(
-                types.Content(
-                    role="user",
-                    parts=[types.Part.from_text(text=user_message)]
-                )
-            )
-            # Google Search tool
-            tools = [
-                types.Tool(googleSearch=types.GoogleSearch(
-                )),
-            ]
-            generate_content_config = types.GenerateContentConfig(
-                thinking_config = types.ThinkingConfig(
-                    thinking_budget=-1,
-                ),
-                tools=tools,
-            )
-            response_text = ""
-            for chunk in client.models.generate_content_stream(
-                model=model,
-                contents=contents,
-                config=generate_content_config,
-            ):
-                if chunk.text:
-                    response_text += chunk.text
-
-            return response_text
-        except Exception as e:
-            return f"發生錯誤：{str(e)}"
-
 
 dms = DMSSystem()
 
@@ -863,22 +819,44 @@ def video_feed():
 # Gemini 
 @app.route('/chat', methods=['POST'])
 def chat():
-    """處理聊天請求"""
-    #get user message and conversation history from request
-    data = request.get_json()
-    user_message = data.get('message', '')
-    conversation_history = data.get('history', [])
-    
+    user_message = request.json.get('message')
     if not user_message:
-        return jsonify({'error': '訊息不能為空'}), 400
-    
-    # 呼叫 Gemini API
-    bot_response = chat(user_message, conversation_history)
-    
-    return jsonify({
-        'response': bot_response,
-        'status': 'success'
-    })
+        return jsonify({"error": "No message provided"}), 400
+
+    try:
+        # 你的 Google Studio 程式碼片段
+        model = "gemini-2.5-flash"
+        contents = [
+            types.Content(
+                role="user",
+                parts=[
+                    types.Part.from_text(text=user_message),
+                ],
+            ),
+        ]
+        tools = [
+            types.Tool(googleSearch=types.GoogleSearch()),
+        ]
+        generate_content_config = types.GenerateContentConfig(
+            thinking_config=types.ThinkingConfig(),
+            tools=tools,
+        )
+
+        # 這裡改用 client.models.generate_content_stream()
+        response_text = ""
+        for chunk in client.models.generate_content_stream(
+            model=model,
+            contents=contents,
+            config=generate_content_config,
+        ):
+            # 串流回應，將所有文字合併
+            response_text += chunk.text
+
+        # 回傳完整的 Gemini 回應
+        return jsonify({"reply": response_text})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 # 資料 API 路由
 @app.route('/data')
 def data():

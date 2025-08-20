@@ -949,7 +949,7 @@
                 </div>
                 <div class="chat-input">
                     <input type="text" id="userInput" placeholder="輸入您的訊息..." onkeypress="handleChatEnter(event)">
-                    <button onclick="sendMessage()">發送</button>
+                    <button type='button'>發送</button>
                 </div>
             </div>
         </div>
@@ -1269,75 +1269,75 @@
         }
 
         // ===== 聊天機器人功能 =====
-        function addChatMessage(message, isUser = false) {
-            const chatBox = document.getElementById('chatBox');
-            if (!chatBox) return;
+        // function addChatMessage(message, isUser = false) {
+        //     const chatBox = document.getElementById('chatBox');
+        //     if (!chatBox) return;
 
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+        //     const messageDiv = document.createElement('div');
+        //     messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
             
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'message-content';
-            contentDiv.textContent = message;
+        //     const contentDiv = document.createElement('div');
+        //     contentDiv.className = 'message-content';
+        //     contentDiv.textContent = message;
             
-            messageDiv.appendChild(contentDiv);
-            chatBox.appendChild(messageDiv);
+        //     messageDiv.appendChild(contentDiv);
+        //     chatBox.appendChild(messageDiv);
             
-            // 滾動到底部
-            chatBox.scrollTop = chatBox.scrollHeight;
+        //     // 滾動到底部
+        //     chatBox.scrollTop = chatBox.scrollHeight;
             
-            return messageDiv;
-        }
+        //     return messageDiv;
+        // }
 
-        async function sendMessage() {
-            const input = document.getElementById('userInput');
-            if (!input) return;
+        // async function sendMessage() {
+        //     const input = document.getElementById('userInput');
+        //     if (!input) return;
 
-            const message = input.value.trim();
-            if (!message) return;
+        //     const message = input.value.trim();
+        //     if (!message) return;
 
-            // 顯示用戶訊息
-            addChatMessage(message, true);
-            input.value = '';
+        //     // 顯示用戶訊息
+        //     addChatMessage(message, true);
+        //     input.value = '';
 
-            // 顯示載入中
-            const loadingMsg = addChatMessage('正在思考中...');
+        //     // 顯示載入中
+        //     const loadingMsg = addChatMessage('正在思考中...');
             
-            try {
-                // 這裡應該連接到您的聊天機器人 API
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: message,
-                        history: chatHistory
-                    })
-                });
+        //     try {
+        //         // 這裡應該連接到您的聊天機器人 API
+        //         const response = await fetch('/chat', {
+        //             method: 'POST',
+        //             headers: { 'Content-Type': 'application/json' },
+        //             body: JSON.stringify({
+        //                 message: message,
+        //                 history: chatHistory
+        //             })
+        //         });
 
-                const data = await response.json();
+        //         const data = await response.json();
                 
-                // 移除載入訊息
-                loadingMsg.remove();
+        //         // 移除載入訊息
+        //         loadingMsg.remove();
                 
-                // 顯示回應
-                addChatMessage(data.response || '抱歉，我現在無法回應。請稍後再試。');
+        //         // 顯示回應
+        //         addChatMessage(data.response || '抱歉，我現在無法回應。請稍後再試。');
                 
-                // 更新對話歷史
-                chatHistory.push({ role: 'user', content: message });
-                chatHistory.push({ role: 'assistant', content: data.response });
+        //         // 更新對話歷史
+        //         chatHistory.push({ role: 'user', content: message });
+        //         chatHistory.push({ role: 'assistant', content: data.response });
                 
-            } catch (error) {
-                console.error('聊天請求失敗:', error);
-                loadingMsg.remove();
-                addChatMessage('抱歉，連接失敗。請檢查網路連線後重試。');
-            }
-        }
+        //     } catch (error) {
+        //         console.error('聊天請求失敗:', error);
+        //         loadingMsg.remove();
+        //         addChatMessage('抱歉，連接失敗。請檢查網路連線後重試。');
+        //     }
+        // }
 
-        function handleChatEnter(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
-            }
-        }
+        // function handleChatEnter(event) {
+        //     if (event.key === 'Enter') {
+        //         sendMessage();
+        //     }
+        // }
 
         // ===== Google Maps 功能 =====
         function initMap() {
@@ -1482,6 +1482,67 @@
                 if (intervalId) clearInterval(intervalId);
             });
         });
+
+        // ===== 聊天功能 =====
+        // 取得所有需要的 DOM 元素
+    const chatBox = document.getElementById('chatBox');
+    const userInput = document.getElementById('userInput');
+    const sendButton = document.querySelector('.chat-input button');
+
+    // 輔助函式：新增訊息到聊天介面
+    function addMessageToChat(sender, message) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', sender === 'user' ? 'user' : 'bot');
+        messageElement.innerHTML = `<div class="message-content">${message}</div>`;
+        chatBox.appendChild(messageElement);
+
+        // 自動捲動到最底部
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // 處理發送訊息的邏輯
+    function sendMessage() {
+        const userMessage = userInput.value.trim();
+
+        if (userMessage === '') {
+            return; // 如果訊息是空的，就什麼都不做
+        }
+
+        // 將使用者訊息顯示在介面上
+        addMessageToChat('user', userMessage);
+        userInput.value = ''; // 清空輸入框
+
+        // 使用 Fetch API 發送訊息到 Flask 後端
+        fetch('/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: userMessage })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.reply) {
+                // 將 Gemini 的回應顯示在介面上
+                addMessageToChat('bot', data.reply);
+            } else if (data.error) {
+                addMessageToChat('bot', `發生錯誤: ${data.error}`);
+            }
+        })
+        .catch(error => {
+            addMessageToChat('bot', `傳送失敗: ${error}`);
+        });
+    }
+
+    // 監聽發送按鈕的點擊事件
+    sendButton.addEventListener('click', sendMessage);
+
+    // 處理按下 Enter 鍵的事件
+    function handleChatEnter(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    }
     </script>
     <script src="chatbot.js"></script>
 
