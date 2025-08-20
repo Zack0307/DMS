@@ -22,8 +22,7 @@ from utils.drawing import Drawing
 from pylivelinkface import PyLiveLinkFace, FaceBlendShape
 from utils.blendshape_calculator import BlendshapeCalculator
 from gemini_chatbot import API_KEY
-from langchain_core.messages import HumanMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
+
 
 
 
@@ -718,53 +717,6 @@ class DMSSystem:
                 self.angle_buffer.add([pitch, yaw, roll])
                 pitch, yaw, roll = self.angle_buffer.get_average()
                 self.head_pose = self.analyze_head_pose(image, img_w, img_h, self.nose_3d_points, self.nose_2d_points)
-
-                #mediapipe landmark
-                # for face_landmarks in results.multi_face_landmarks:
-                #             pose_transform_mat, metric_landmarks, rotation_vector, translation_vector = self.calculate_rotation(face_landmarks, self.pcf, rgb_image.shape)  
-                #             if self.show_3d:
-                #                 face_image_3d = Drawing.draw_3d_face(metric_landmarks, image)
-
-                #             # draw the face mesh 
-                #             drawing_utils.draw_landmarks(
-                #                 image=image,
-                #                 landmark_list=face_landmarks,
-                #                 connections=face_mesh.FACEMESH_TESSELATION,
-                #                 landmark_drawing_spec=None,
-                #                 connection_drawing_spec=drawing_styles
-                #                 .get_default_face_mesh_tesselation_style())
-
-                #             # draw the face contours
-                #             drawing_utils.draw_landmarks(
-                #                 image=image,
-                #                 landmark_list=face_landmarks,
-                #                 connections=face_mesh.FACEMESH_CONTOURS,
-                #                 landmark_drawing_spec=None,
-                #                 connection_drawing_spec=drawing_styles
-                #                 .get_default_face_mesh_contours_style())
-                        
-                #             # draw iris points
-                #             image = Drawing.draw_landmark_point(face_landmarks.landmark[468], image, color = (0, 0, 255))
-                #             # image = Drawing.draw_landmark_point(face_landmarks.landmark[473], image, color = (0, 255, 0))
-
-                #             # calculate and set all the blendshapes                
-                #             self.blendshape_calulator.calculate_blendshapes(
-                #                 self.live_link_face, metric_landmarks[0:3].T, face_landmarks.landmark)
-
-                #             # calculate the head rotation out of the pose matrix
-                #             eulerAngles = transforms3d.euler.mat2euler(pose_transform_mat)
-                #             pitch = -eulerAngles[0]
-                #             yaw = eulerAngles[1]
-                #             roll = eulerAngles[2]
-                #             self.live_link_face.set_blendshape(
-                #                 FaceBlendShape.HeadPitch, pitch)
-                #             self.live_link_face.set_blendshape(
-                #                 FaceBlendShape.HeadRoll, roll)
-                #             self.live_link_face.set_blendshape(FaceBlendShape.HeadYaw, yaw)
-
-                #             # Flip the image horizontally for a selfie-view display.
-                #             self.image = cv.flip(image, 1).astype('uint8')
-
         else:
             self.add_alert("未檢測到駕駛員", "warning")
         
