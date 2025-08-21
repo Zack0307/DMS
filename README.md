@@ -14,10 +14,10 @@ Test computer and System:
 GEMINI API_KEY 申請:https://aistudio.google.com/apikey
 
 請將這行
-'''
+```
 註解掉from gemini_chatbot import API_KEY
 client = genai.Client(api_key=API_KEY) #換成自己的API KEY
-'''
+```
 
 ```
 pip install google-genai
