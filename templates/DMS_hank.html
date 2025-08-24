@@ -689,6 +689,42 @@
             z-index: 500;
             animation: slideUp 0.3s ease-out;
         }
+        .system-marquee {
+            width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            color:#9aaa06e7;
+            background-color: rgb(255, 255, 0);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .system-marquee-content {
+            display: inline-block;
+            animation: marquee-system 16s linear infinite;
+        }
+        @keyframes marquee-system {
+            0% { transform: translateX(800%); }
+            100% { transform: translateX(-100%); }
+        }
+        /* 動態警報跑馬燈 */
+        .recent-alerts {
+            width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            padding: 10px;
+            transition: background-color 0.3s; /* 平滑背景變化 */
+        }
+        .recent-alerts.has-alerts {
+            background-color: #FFFF00; /* 有警報時黃色背景 */
+        }
+        .recent-alerts .marquee-content {
+            display: inline-block;
+            animation: marquee-alerts 10s linear infinite;
+        }
+        @keyframes marquee-alerts {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
 
         body.dark-theme .alert-marquee {
             background: rgba(245, 158, 11, 0.9);
@@ -959,10 +995,10 @@
     </div>
 
     <!-- 警報跑馬燈 -->
-    <div class="alert-marquee" style="display: none;">
-        <marquee behavior="scroll" direction="left" scrollamount="5">
+    <div class="system-marquee-content" >
+        <div class="system-marquee">
             ⚠️ 系統正常運行中，持續監控駕駛狀態...
-        </marquee>
+        </div>
     </div>
 
     <!-- Google Maps API -->
@@ -1088,7 +1124,7 @@
                 
                 switch(key) {
                     case 'fatigueLevel':
-                        if (numValue > 0.7) status = 'critical';
+                        if ( numValue > 0.7) status = 'critical';
                         else if (numValue > 0.5) status = 'warning';
                         break;
                     case 'attentionLevel':
@@ -1105,21 +1141,30 @@
             }
 
             updateHeadPose(headPose) {
-                const headPoseEl = document.getElementById('headPose');
-                if (!headPoseEl) return;
-
-                if (headPose && typeof headPose === 'object') {
-                    const pitch = headPose.pitch?.toFixed(1) ?? 'N/A';
-                    const yaw = headPose.yaw?.toFixed(1) ?? 'N/A';
-                    const roll = headPose.roll?.toFixed(1) ?? 'N/A';
-                    headPoseEl.textContent = `P:${pitch}° Y:${yaw}° R:${roll}°`;
+                const element = document.getElementById('headPose');
+                if (element) {
+                    element.textContent = headPose || '--';  // 顯示字串
+                    if (headPose === 'Forward') {
+                        element.classList.remove('metric-warning', 'metric-critical');
+                        element.classList.add('metric-normal');
+                    } else if (headPose === 'Left' || headPose === 'Right') {
+                        element.classList.remove('metric-normal', 'metric-critical');
+                        element.classList.add('metric-warning');
+                    } else if (headPose === 'Down') {
+                        element.classList.remove('metric-normal', 'metric-warning');
+                        element.classList.add('metric-critical');
+                    } else {
+                        element.classList.remove('metric-normal', 'metric-warning', 'metric-critical');
+                    }
                 } else {
-                    headPoseEl.textContent = '無資料';
+                    console.error('Element with ID headPose not found');
                 }
             }
 
+            // 更新警報跑馬燈
+
             updateAlertMarquee(alerts) {
-                const marquee = document.querySelector('.alert-marquee');
+                const marquee = document.querySelector('.recent-alerts');
                 if (!marquee) return;
 
                 if (alerts && alerts.length > 0) {
@@ -1217,7 +1262,7 @@
                 const toggleBtn = document.getElementById('toggle-button');
                 
                 if (statusSpan && toggleBtn) {
-                    statusSpan.textContent = isWorking ? '活動中 - 執行中' : '已下班';
+                    statusSpan.textContent = isWorking ? '執行勤務中' : '已下班';
                     toggleBtn.textContent = isWorking ? '下班' : '上班';
                 }
             }

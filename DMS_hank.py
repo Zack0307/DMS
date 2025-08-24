@@ -514,17 +514,17 @@ class DMSSystem:
             face_looks = "Forward"
             if speed > 60:
                 self.add_alert(f"Head{face_looks}", "warning")
-        if SHOW_ON_SCREEN_DATA:
-            cv.putText(
-                image,
-                f"Face Looking at {face_looks}",
-                (img_w - 600, 80),
-                cv.FONT_HERSHEY_TRIPLEX,
-                0.8,
-                (0, 255, 0),
-                2,
-                cv.LINE_AA,
-            )
+        # if SHOW_ON_SCREEN_DATA:
+        #     cv.putText(
+        #         image,
+        #         f"Face Looking at {face_looks}",
+        #         (img_w - 600, 80),
+        #         cv.FONT_HERSHEY_TRIPLEX,
+        #         0.8,
+        #         (0, 255, 0),
+        #         2,
+        #         cv.LINE_AA,
+        #     )
         # Display the nose direction
         nose_3d_projection, jacobian = cv.projectPoints(
             nose_3D_point, rot_vec, trans_vec, cam_matrix, dist_matrix
@@ -537,6 +537,8 @@ class DMSSystem:
         )
 
         cv.line(image, p1, p2, (255, 0, 255), 3)
+
+        return face_looks
     
 
     def add_alert(self, message, level="info"):
@@ -552,23 +554,8 @@ class DMSSystem:
         self.last_alert_time[alert_key] = current_time
         timestamp = datetime.now().strftime("%H:%M:%S")
         
-        # 中文轉英文對照表，避免顯示問題
-        message_dict = {
-            "檢測到疲勞指標": "Fatigue detected",
-            "頭部左轉": "Head turned left",
-            "頭部右轉": "Head turned right", 
-            "頭部低頭": "Head looking down",
-            "頭部仰頭": "Head looking up",
-            "未檢測到駕駛員": "Driver not detected",
-            "DMS系統啟動": "DMS system started",
-            "統計數據已重置": "Statistics reset"
-        }
-        
-        english_message = message_dict.get(message, message)
-        
         self.alerts.append({
             "time": timestamp,
-            "message": english_message,
             "level": level
         })
         
