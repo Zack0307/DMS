@@ -889,15 +889,15 @@
                     <div class="metrics-grid">
                         <div class="metric-card">
                             <h5>今日違規</h5>
-                            <span class="value" id="violation-count">3</span>
+                            <span class="value" id="violation-count">--</span>
                         </div>
                         <div class="metric-card">
                             <h5>安全分數</h5>
-                            <span class="value">85</span><span class="unit">%</span>
+                            <span class="value">--</span><span class="unit">%</span>
                         </div>
                         <div class="metric-card">
                             <h5>行駛時間</h5>
-                            <span class="value" id="route-duration-hours">--</span>
+                            <span class="value" id="route-duration-hours">--<span class="unit">--</span>
                         </div>
                         <div class="metric-card">
                             <h5>行駛距離</h5>
@@ -1271,77 +1271,6 @@
             }
         }
 
-        // ===== 聊天機器人功能 =====
-        // function addChatMessage(message, isUser = false) {
-        //     const chatBox = document.getElementById('chatBox');
-        //     if (!chatBox) return;
-
-        //     const messageDiv = document.createElement('div');
-        //     messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
-            
-        //     const contentDiv = document.createElement('div');
-        //     contentDiv.className = 'message-content';
-        //     contentDiv.textContent = message;
-            
-        //     messageDiv.appendChild(contentDiv);
-        //     chatBox.appendChild(messageDiv);
-            
-        //     // 滾動到底部
-        //     chatBox.scrollTop = chatBox.scrollHeight;
-            
-        //     return messageDiv;
-        // }
-
-        // async function sendMessage() {
-        //     const input = document.getElementById('userInput');
-        //     if (!input) return;
-
-        //     const message = input.value.trim();
-        //     if (!message) return;
-
-        //     // 顯示用戶訊息
-        //     addChatMessage(message, true);
-        //     input.value = '';
-
-        //     // 顯示載入中
-        //     const loadingMsg = addChatMessage('正在思考中...');
-            
-        //     try {
-        //         // 這裡應該連接到您的聊天機器人 API
-        //         const response = await fetch('/chat', {
-        //             method: 'POST',
-        //             headers: { 'Content-Type': 'application/json' },
-        //             body: JSON.stringify({
-        //                 message: message,
-        //                 history: chatHistory
-        //             })
-        //         });
-
-        //         const data = await response.json();
-                
-        //         // 移除載入訊息
-        //         loadingMsg.remove();
-                
-        //         // 顯示回應
-        //         addChatMessage(data.response || '抱歉，我現在無法回應。請稍後再試。');
-                
-        //         // 更新對話歷史
-        //         chatHistory.push({ role: 'user', content: message });
-        //         chatHistory.push({ role: 'assistant', content: data.response });
-                
-        //     } catch (error) {
-        //         console.error('聊天請求失敗:', error);
-        //         loadingMsg.remove();
-        //         addChatMessage('抱歉，連接失敗。請檢查網路連線後重試。');
-        //     }
-        // }
-
-        // function handleChatEnter(event) {
-        //     if (event.key === 'Enter') {
-        //         sendMessage();
-        //     }
-        // }
-
         // ===== Google Maps 功能 =====
         function initMap() {
             directionsService = new google.maps.DirectionsService();
@@ -1435,7 +1364,7 @@
             const durationEl = document.getElementById("route-duration-hours");
             const distanceEl = document.getElementById("route-distance");
             
-            if (durationEl) durationEl.textContent = duration;
+            if (durationEl) durationEl.textContent = duration.replace(/\s*小時/, 'hrs').replace(/\s*分鐘/, 'mins');
             if (distanceEl) distanceEl.textContent = distance.replace(/\s*公里/, '');
         }
 
@@ -1547,7 +1476,6 @@
         }
     }
     </script>
-    <script src="chatbot.js"></script>
 
     <!-- 內聯CSS動畫 -->
     <style>

@@ -22,9 +22,7 @@ from utils.drawing import Drawing
 from pylivelinkface import PyLiveLinkFace, FaceBlendShape
 from utils.blendshape_calculator import BlendshapeCalculator
 from gemini_chatbot import API_KEY
-
-
-
+from flask_cors import CORS  # 引入 CORS
 
 # points of the face model that will be used for SolvePnP later
 points_idx = [33, 263, 61, 291, 199]
@@ -188,7 +186,6 @@ class DMSSystem:
         self.angle_buffer = AngleBuffer(size=MOVING_AVERAGE_WINDOW)
         
         # 系統狀態
-        # self.is_running = False
         self.start_time = None
         self.frame_count = 0
         self.fps = 0
@@ -205,9 +202,7 @@ class DMSSystem:
         self.live_link_face = PyLiveLinkFace(fps = 10, filter_size = 4)
         self.outputFrame = None
         self.running = True
-        # thread = threading.Thread(target=self.camera_thread, daemon=True)
-        # # thread.daemon = True
-        # thread.start()
+        
 
 
     def euclidean_distance_3D(self, points):
@@ -523,7 +518,7 @@ class DMSSystem:
             cv.putText(
                 image,
                 f"Face Looking at {face_looks}",
-                (img_w - 400, 80),
+                (img_w - 600, 80),
                 cv.FONT_HERSHEY_TRIPLEX,
                 0.8,
                 (0, 255, 0),
@@ -805,6 +800,7 @@ class DMSSystem:
 dms = DMSSystem()
 
 app = Flask(__name__, template_folder='templates', static_folder='static') # 指定 template_folder 和 static_folder
+CORS(app)
 dms.run_2d()  # 啟動 DMS 2d 系統
 # 首頁路由，用於提供 HTML 儀表板
 @app.route('/')
@@ -878,8 +874,4 @@ def reset_status():
     return jsonify({"status": "success", "message": "統計數據已重置"})
 
 if __name__ == '__main__':
-    # 確保攝影機初始化在 Flask 應用程式運行之前或非同步進行
-    # 這裡 dms.run() 是作為生成器被調用，它會在請求時啟動攝像頭
-    # 如果您需要DMS在應用啟動時就開始運行，可能需要單獨線程來管理
-    # 但對於視頻流，這種請求時啟動的方式通常是OK的。
     app.run(host='0.0.0.0', port=5000, debug=True, threaded=True) # 使用 threaded=True 允許並發請求
