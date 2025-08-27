@@ -707,7 +707,7 @@ class DMSSystem:
                     x1, y1 = hand_pts.max(axis=0)
                     cv.rectangle(rgb_image, (x0, y0), (x1, y1), (255, 0, 0), 2)  # 藍色方框
                     # 手腕到耳朵距離
-                    wrist = handLms.landmark[self.hand_mesh.HandLandmark.WRIST]
+                    wrist = handLms.landmark[self.mp_hand_mesh.HandLandmark.WRIST]
                     wrist_pt = np.array([wrist.x * img_w, wrist.y * img_h])
                     dist = min(np.linalg.norm(wrist_pt - ear_left), np.linalg.norm(wrist_pt - ear_right))
                     if dist / img_w < PHONE_DIST_TH:
