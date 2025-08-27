@@ -91,6 +91,7 @@ LEFT_EYE_LEFT_CORNER_INDEX = 33
 RIGHT_EYE_RIGHT_CORNER_INDEX = 263
 LEFT_MOUTH_CORNER_INDEX = 61
 RIGHT_MOUTH_CORNER_INDEX = 291
+PHONE_DIST_TH   = 0.15       # 手靠近耳朵距離閾值 (相對寬度)
 
 ## MediaPipe Model Confidence Parameters
 # These thresholds determine how confidently the model must detect or track to consider the results valid.
@@ -601,95 +602,93 @@ class DMSSystem:
             # 繪製視線（藍色線條）
             cv.line(image, (pupil_x, pupil_y), (end_x, end_y), (255, 0, 0), 2)
 
-    def draw_status_panel(self, image):
-        """繪製狀態面板"""
-        h, w = image.shape[:2]
+    # def draw_status_panel(self, image):
+    #     """繪製狀態面板"""
+    #     h, w = image.shape[:2]
         
-        # 背景面板
-        overlay = image.copy()
-        cv.rectangle(overlay, (10, 10), (400, 200), (0, 0, 0), -1)
-        cv.addWeighted(overlay, 0.7, image, 0.3, 0, image)
+    #     # 背景面板
+    #     overlay = image.copy()
+    #     cv.rectangle(overlay, (10, 10), (400, 200), (0, 0, 0), -1)
+    #     cv.addWeighted(overlay, 0.7, image, 0.3, 0, image)
         
-        # 狀態資訊
-        y_offset = 35
-        font = cv.FONT_HERSHEY_SIMPLEX
+    #     # 狀態資訊
+    #     y_offset = 35
+    #     font = cv.FONT_HERSHEY_SIMPLEX
         
-        # 系統狀態
-        status_color = (0, 255, 0)  # 綠色
-        if self.fatigue_score > 70:
-            status_color = (0, 0, 255)  # 紅色
-        elif self.fatigue_score > 40:
-            status_color = (0, 255, 255)  # 黃色
+    #     # 系統狀態
+    #     status_color = (0, 255, 0)  # 綠色
+    #     if self.fatigue_score > 70:
+    #         status_color = (0, 0, 255)  # 紅色
+    #     elif self.fatigue_score > 40:
+    #         status_color = (0, 255, 255)  # 黃色
         
-        cv.putText(image, "DMS System Status", (20, y_offset), font, 0.6, (255, 255, 255), 2)
-        y_offset += 25
+    #     cv.putText(image, "DMS System Status", (20, y_offset), font, 0.6, (255, 255, 255), 2)
+    #     y_offset += 25
         
-        # 疲勞指數
-        cv.putText(image, f"Fatigue Level: {self.fatigue_score:.1f}%", 
-                    (20, y_offset), font, 0.5, status_color, 1)
-        y_offset += 20
+    #     # 疲勞指數
+    #     cv.putText(image, f"Fatigue Level: {self.fatigue_score:.1f}%", 
+    #                 (20, y_offset), font, 0.5, status_color, 1)
+    #     y_offset += 20
         
-        # 注意力指數
-        cv.putText(image, f"Attention: {self.attention_score:.1f}%", 
-                    (20, y_offset), font, 0.5, (255, 255, 255), 1)
-        y_offset += 20
+    #     # 注意力指數
+    #     cv.putText(image, f"Attention: {self.attention_score:.1f}%", 
+    #                 (20, y_offset), font, 0.5, (255, 255, 255), 1)
+    #     y_offset += 20
         
-        # 眨眼次數
-        cv.putText(image, f"Blink Count: {self.blink_count}", 
-                    (20, y_offset), font, 0.5, (255, 255, 255), 1)
-        y_offset += 20
+    #     # 眨眼次數
+    #     cv.putText(image, f"Blink Count: {self.blink_count}", 
+    #                 (20, y_offset), font, 0.5, (255, 255, 255), 1)
+    #     y_offset += 20
         
-        # FPS
-        cv.putText(image, f"FPS: {self.fps:.1f}", 
-                    (20, y_offset), font, 0.5, (255, 255, 255), 1)
-        y_offset += 20
+    #     # FPS
+    #     cv.putText(image, f"FPS: {self.fps:.1f}", 
+    #                 (20, y_offset), font, 0.5, (255, 255, 255), 1)
+    #     y_offset += 20
         
-        # 運行時間
-        if self.start_time:
-            runtime = time.time() - self.start_time
-            minutes = int(runtime // 60)
-            seconds = int(runtime % 60)
-            cv.putText(image, f"Runtime: {minutes:02d}:{seconds:02d}", 
-                        (20, y_offset), font, 0.5, (255, 255, 255), 1)
+    #     # 運行時間
+    #     if self.start_time:
+    #         runtime = time.time() - self.start_time
+    #         minutes = int(runtime // 60)
+    #         seconds = int(runtime % 60)
+    #         cv.putText(image, f"Runtime: {minutes:02d}:{seconds:02d}", 
+    #                     (20, y_offset), font, 0.5, (255, 255, 255), 1)
 
-    def draw_alerts(self, image):
-        """繪製警報"""
-        if not self.alerts:
-            return
+    # def draw_alerts(self, image):
+    #     """繪製警報"""
+    #     if not self.alerts:
+    #         return
         
-        h, w = image.shape[:2]
-        y_start = h - 30
+    #     h, w = image.shape[:2]
+    #     y_start = h - 30
         
-        # 顯示最近的3個警報
-        recent_alerts = self.alerts[-3:]
-        for i, alert in enumerate(reversed(recent_alerts)):
-            y_pos = y_start - (i * 25)
-            color = (0, 255, 255) if alert["level"] == "warning" else (255, 255, 255)
-            # 使用英文顯示避免編碼問題
-            text = f"{alert['time']}: {alert['message']}"
-            # 嘗試編碼處理
-            try:
-                cv.putText(image, text, (10, y_pos), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
-            except:
-                # 如果中文顯示失敗，使用英文替代
-                english_text = f"{alert['time']}: Alert - {alert['level']}"
-                cv.putText(image, english_text, (10, y_pos), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+    #     # 顯示最近的3個警報
+    #     recent_alerts = self.alerts[-3:]
+    #     for i, alert in enumerate(reversed(recent_alerts)):
+    #         y_pos = y_start - (i * 25)
+    #         color = (0, 255, 255) if alert["level"] == "warning" else (255, 255, 255)
+    #         # 使用英文顯示避免編碼問題
+    #         text = f"{alert['time']}: {alert['message']}"
+    #         # 嘗試編碼處理
+    #         try:
+    #             cv.putText(image, text, (10, y_pos), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+    #         except:
+    #             # 如果中文顯示失敗，使用英文替代
+    #             english_text = f"{alert['time']}: Alert - {alert['level']}"
+    #             cv.putText(image, english_text, (10, y_pos), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
 
     def process_frame(self, image):
         """處理單幀圖像"""
         rgb_image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
         img_h, img_w = image.shape[:2]
-        results = self.face_mesh.process(rgb_image)
-        face_image_3d = None
-        if results.multi_face_landmarks:
-            # for face_landmarks in results.multi_face_landmarks:
-                # ... (landmark processing)
-
+        face_results = self.face_mesh.process(rgb_image)
+        hands_res = self.hand_mesh.process(rgb_image)
+        phone_near = False
+        if face_results.multi_face_landmarks and hands_res.multi_hand_landmarks:
             with self.data_lock:
                 self.mesh_points = np.array([np.multiply([p.x, p.y], [img_w, img_h]).astype(int)
-                    for p in results.multi_face_landmarks[0].landmark])
+                    for p in face_results.multi_face_landmarks[0].landmark])
                 self.mesh_points_3d = np.array([[lm.x, lm.y, lm.z] 
-                    for lm in results.multi_face_landmarks[0].landmark])
+                    for lm in face_results.multi_face_landmarks[0].landmark])
                 self.head_pose_points_3d = np.multiply(self.mesh_points_3d[_indices_pose], [img_w, img_h, 1])
                 self.head_pose_points_2d = self.mesh_points[_indices_pose]
                 self.nose_3d_points = np.multiply(self.head_pose_points_3d[0], [1, 1, 3000])
@@ -697,6 +696,26 @@ class DMSSystem:
                 ear_left = self.blinking_ratio(self.mesh_points_3d)
                 ear_right = ear_left # blinking_ratio calculates for both eyes
                 self.avg_ear = self.analyze_fatigue(ear_left, ear_right)
+                # 手機靠耳
+                face_landmarks = face_results.multi_face_landmarks[0].landmark
+                ear_left = np.array([face_landmarks[234].x * img_w, face_landmarks[234].y * img_h])
+                ear_right = np.array([face_landmarks[454].x * img_w, face_landmarks[454].y * img_h])
+                for handLms in hands_res.multi_hand_landmarks:
+                # 手掌外框: 使用所有手部 landmarks 計算外框
+                    hand_pts = np.array([[lm.x * img_w, lm.y * img_h] for lm in handLms.landmark], dtype=np.int32)
+                    x0, y0 = hand_pts.min(axis=0)
+                    x1, y1 = hand_pts.max(axis=0)
+                    cv.rectangle(rgb_image, (x0, y0), (x1, y1), (255, 0, 0), 2)  # 藍色方框
+                    # 手腕到耳朵距離
+                    wrist = handLms.landmark[self.hand_mesh.HandLandmark.WRIST]
+                    wrist_pt = np.array([wrist.x * img_w, wrist.y * img_h])
+                    dist = min(np.linalg.norm(wrist_pt - ear_left), np.linalg.norm(wrist_pt - ear_right))
+                    if dist / img_w < PHONE_DIST_TH:
+                        phone_near = True
+                        break
+                if phone_near:
+                    self.add_alert("檢測到手機靠耳", "warning")
+
             
                 # 計算頭部姿態
                 pitch, yaw, roll = self.calculate_head_pose(self.mesh_points, (img_h, img_w))
@@ -708,7 +727,6 @@ class DMSSystem:
         
         return image
     
-
     def calculate_fps(self):
         """計算FPS"""
         current_time = time.time()

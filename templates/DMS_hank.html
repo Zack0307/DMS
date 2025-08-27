@@ -11,6 +11,7 @@
             --danger-color: #ef4444;
             --warning-color: #f59e0b;
             --success-color: #10b981;
+            --fail-color:#362626;
             --dark-bg: #1a1a1a;
             --dark-panel: #2a2a2a;
             --dark-border: #3a3a3a;
@@ -221,7 +222,7 @@
         }
 
         .work-toggle button {
-            background: var(--success-color);
+            background: var(--fail-color);
             color: white;
             border: none;
             padding: 12px 24px;
@@ -693,7 +694,7 @@
             width: 100%;
             overflow: hidden;
             white-space: nowrap;
-            color:#9aaa06e7;
+            color:#000000e7;
             background-color: rgb(255, 255, 0);
             padding: 10px;
             border-radius: 10px;
@@ -851,7 +852,7 @@
                 </div>
                 <div class="profile-status">
                     <div class="status-dot"></div>
-                    <span id="work-status">活動中 - 執行中</span>
+                    <span id="work-status">執行勤務中</span>
                 </div>
                 <div class="work-toggle">
                     <button id="toggle-button">下班</button>
@@ -1176,45 +1177,45 @@
                 }
             }
 
-            // 獲取歷史事件
-            async fetchEvents() {
-                try {
-                    const response = await fetch('http://localhost:5000/events');
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            // // 獲取歷史事件
+            // async fetchEvents() {
+            //     try {
+            //         const response = await fetch('http://localhost:5000/events');
+            //         if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     
-                    const data = await response.json();
-                    this.updateEventTable(data);
-                } catch (error) {
-                    console.error('事件獲取失敗:', error);
-                }
-            }
+            //         const data = await response.json();
+            //         this.updateEventTable(data);
+            //     } catch (error) {
+            //         console.error('事件獲取失敗:', error);
+            //     }
+            // }
 
-            updateEventTable(events) {
-                const tbody = document.getElementById('eventTableBody');
-                if (!tbody) return;
+            // updateEventTable(events) {
+            //     const tbody = document.getElementById('eventTableBody');
+            //     if (!tbody) return;
 
-                tbody.innerHTML = '';
+            //     tbody.innerHTML = '';
                 
-                if (events.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; opacity: 0.6;">暫無數據</td></tr>';
-                    return;
-                }
+            //     if (events.length === 0) {
+            //         tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; opacity: 0.6;">暫無數據</td></tr>';
+            //         return;
+            //     }
 
-                const recentEvents = events.slice(-5).reverse();
-                recentEvents.forEach(event => {
-                    const row = tbody.insertRow();
-                    row.innerHTML = `
-                        <td>${event.timestamp}</td>
-                        <td>${event.event}</td>
-                        <td>${event.status ? '⚠️' : '✅'}</td>
-                    `;
-                });
-            }
+            //     const recentEvents = events.slice(-5).reverse();
+            //     recentEvents.forEach(event => {
+            //         const row = tbody.insertRow();
+            //         row.innerHTML = `
+            //             <td>${event.timestamp}</td>
+            //             <td>${event.event}</td>
+            //             <td>${event.status ? '⚠️' : '✅'}</td>
+            //         `;
+            //     });
+            // }
 
             // 更新警報清單
             async updateAlertTicker() {
                 try {
-                    const response = await fetch('http://localhost:5000/events');
+                    const response = await fetch('http://localhost:5000/data');
                     if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     
                     const data = await response.json();
