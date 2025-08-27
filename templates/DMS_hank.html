@@ -11,7 +11,6 @@
             --danger-color: #ef4444;
             --warning-color: #f59e0b;
             --success-color: #10b981;
-            --fail-color:#362626;
             --dark-bg: #1a1a1a;
             --dark-panel: #2a2a2a;
             --dark-border: #3a3a3a;
@@ -222,7 +221,7 @@
         }
 
         .work-toggle button {
-            background: var(--fail-color);
+            background: var(--success-color);
             color: white;
             border: none;
             padding: 12px 24px;
@@ -855,7 +854,7 @@
                     <span id="work-status">執行勤務中</span>
                 </div>
                 <div class="work-toggle">
-                    <button id="toggle-button">下班</button>
+                    <button id="dutu-off-button">下班</button>
                 </div>
             </div>
 
@@ -1030,7 +1029,7 @@
 
             setupEventListeners() {
                 // 工作狀態切換
-                document.getElementById('toggle-button').addEventListener('click', this.toggleWorkStatus);
+                document.getElementById('duty-off-button').addEventListener('click', (e) => this.toggleWorkStatus(e));
                 
                 // 聊天輸入監聽
                 const chatInput = document.getElementById('userInput');
@@ -1257,14 +1256,42 @@
             }
 
             // 切換工作狀態
-            toggleWorkStatus() {
+            async toggleWorkStatus() {
                 isWorking = !isWorking;
-                const statusSpan = document.getElementById('work-status');
-                const toggleBtn = document.getElementById('toggle-button');
-                
-                if (statusSpan && toggleBtn) {
-                    statusSpan.textContent = isWorking ? '執行勤務中' : '已下班';
-                    toggleBtn.textContent = isWorking ? '下班' : '上班';
+
+                // 按下下班按鈕同時重置數據
+                if (!isWorking) {
+                    try {
+                        const response = await fetch('/reset_status', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({})
+                        });
+
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        
+                        const result = await response.json();
+                        console.log('Reset status:', result);
+
+                        // 更新狀態顯示
+                        document.getElementById('work-status').textContent = isWorking ? '執行勤務中' : '已下班';
+                        document.getElementById('duty-off-button').textContent = isWorking ? '下班' : '上班';
+
+                        // 重新更新數據
+                        this.updateData(); 
+
+                    } catch (error) {
+                        console.error('下班切換失敗:', error);
+                        alert('切換失敗，請檢查連線');
+                        // 如果 API 失敗，把狀態切回去
+                        isWorking = true;
+                    }
+                } else {
+                    // 切換成上班邏輯
+                    document.getElementById('work-status').textContent = '執行勤務中';
+                    document.getElementById('duty-off-button').textContent = '下班';
                 }
             }
 
