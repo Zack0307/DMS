@@ -813,6 +813,11 @@ def index():
 def show_membership_page():
     return render_template('membership.html')
 
+@app.route('/login')
+def show_login_page():
+    return render_template('login.html')
+
+
 # 影像串流路由
 @app.route('/video_feed')
 def video_feed():

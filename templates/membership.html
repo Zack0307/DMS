@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>會員資料</title>
+  <title>會員註冊</title>
   <style>
     * {
       margin: 0;
@@ -23,7 +23,7 @@
 
     .container {
       width: 100%;
-      max-width: 480px;
+      max-width: 520px;
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
       border-radius: 20px;
@@ -102,6 +102,53 @@
     .form-group input:hover,
     .form-group select:hover {
       border-color: #cbd5e0;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #666;
+      font-size: 14px;
+      padding: 5px;
+      transition: color 0.3s ease;
+    }
+
+    .toggle-password:hover {
+      color: #667eea;
+    }
+
+    .password-strength {
+      margin-top: 8px;
+      display: none;
+    }
+
+    .password-strength-bar {
+      height: 4px;
+      background: #e2e8f0;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .password-strength-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: all 0.3s ease;
+      width: 0%;
+    }
+
+    .password-strength-text {
+      font-size: 12px;
+      color: #718096;
     }
 
     .form-row {
@@ -230,6 +277,25 @@
       }
     }
 
+    .footer-links {
+      text-align: center;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .footer-links a {
+      color: #667eea;
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.3s ease;
+    }
+
+    .footer-links a:hover {
+      color: #764ba2;
+      text-decoration: underline;
+    }
+
     @media (max-width: 600px) {
       .container {
         padding: 30px 20px;
@@ -263,23 +329,60 @@
     .form-group.error .error-message {
       display: block;
     }
+
+    .form-group.success input {
+      border-color: #38a169;
+      box-shadow: 0 0 0 3px rgba(56, 161, 105, 0.1);
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>會員資料</h1>
-      <p>請填寫您的個人資訊</p>
+      <h1>會員註冊</h1>
+      <p>請填寫您的註冊資訊</p>
     </div>
 
     <div class="success-message" id="successMessage">
-      ✅ 資料已成功儲存！
+      ✅ 註冊成功！正在跳轉到登入頁面...
     </div>
 
-    <form id="profileForm">
+    <form id="registerForm">
+      <!-- 帳號密碼區域 -->
+      <div class="form-group">
+        <label for="email">註冊信箱 *</label>
+        <input type="email" id="email" placeholder="請輸入您的Email" required />
+        <div class="error-message">請輸入有效的Email地址</div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">密碼 *</label>
+        <div class="password-wrapper">
+          <input type="password" id="password" placeholder="請輸入密碼 (至少8個字元)" required />
+          <button type="button" class="toggle-password" onclick="togglePassword('password')">👁️</button>
+        </div>
+        <div class="password-strength" id="passwordStrength">
+          <div class="password-strength-bar">
+            <div class="password-strength-fill" id="strengthFill"></div>
+          </div>
+          <div class="password-strength-text" id="strengthText">密碼強度：弱</div>
+        </div>
+        <div class="error-message">密碼至少需要8個字元</div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">確認密碼 *</label>
+        <div class="password-wrapper">
+          <input type="password" id="confirmPassword" placeholder="請再次輸入密碼" required />
+          <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword')">👁️</button>
+        </div>
+        <div class="error-message">密碼不一致</div>
+      </div>
+
+      <!-- 基本資料區域 -->
       <div class="form-group">
         <label for="name">姓名 *</label>
-        <input type="text" id="name" required />
+        <input type="text" id="name" placeholder="請輸入您的姓名" required />
         <div class="error-message">請輸入姓名</div>
       </div>
 
@@ -326,33 +429,132 @@
       </div>
 
       <div class="button-group">
-        <button type="button" class="btn btn-primary" onclick="saveProfile()">
+        <button type="button" class="btn btn-primary" onclick="registerUser()">
           <span class="btn-text">註冊</span>
           <div class="loading"></div>
         </button>
-        <button type="button" class="btn btn-secondary" onclick="logout()">
+        <button type="button" class="btn btn-secondary" onclick="cancelRegister()">
           取消
         </button>
       </div>
     </form>
+
+    <div class="footer-links">
+      <a href="login.html">已有帳號？立即登入</a>
+    </div>
   </div>
 
   <script>
+    // 切換密碼顯示/隱藏
+    function togglePassword(inputId) {
+      const input = document.getElementById(inputId);
+      const button = input.nextElementSibling;
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        button.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        button.textContent = '👁️';
+      }
+    }
+
+    // 檢查密碼強度
+    function checkPasswordStrength(password) {
+      let strength = 0;
+      let strengthText = '';
+      let color = '';
+
+      if (password.length >= 8) strength += 1;
+      if (/[a-z]/.test(password)) strength += 1;
+      if (/[A-Z]/.test(password)) strength += 1;
+      if (/[0-9]/.test(password)) strength += 1;
+      if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+
+      const strengthFill = document.getElementById('strengthFill');
+      const strengthTextEl = document.getElementById('strengthText');
+
+      switch (strength) {
+        case 0:
+        case 1:
+          strengthText = '密碼強度：很弱';
+          color = '#e53e3e';
+          strengthFill.style.width = '20%';
+          break;
+        case 2:
+          strengthText = '密碼強度：弱';
+          color = '#ed8936';
+          strengthFill.style.width = '40%';
+          break;
+        case 3:
+          strengthText = '密碼強度：中等';
+          color = '#ecc94b';
+          strengthFill.style.width = '60%';
+          break;
+        case 4:
+          strengthText = '密碼強度：強';
+          color = '#38a169';
+          strengthFill.style.width = '80%';
+          break;
+        case 5:
+          strengthText = '密碼強度：很強';
+          color = '#38a169';
+          strengthFill.style.width = '100%';
+          break;
+      }
+
+      strengthFill.style.backgroundColor = color;
+      strengthTextEl.textContent = strengthText;
+      strengthTextEl.style.color = color;
+
+      return strength >= 2;
+    }
+
     // 表單驗證
     function validateForm() {
+      const email = document.getElementById('email');
+      const password = document.getElementById('password');
+      const confirmPassword = document.getElementById('confirmPassword');
       const name = document.getElementById('name');
       const phone = document.getElementById('phone');
       let isValid = true;
 
       // 清除之前的錯誤狀態
       document.querySelectorAll('.form-group').forEach(group => {
-        group.classList.remove('error');
+        group.classList.remove('error', 'success');
       });
+
+      // 驗證Email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email.value.trim() || !emailRegex.test(email.value)) {
+        email.closest('.form-group').classList.add('error');
+        isValid = false;
+      } else {
+        email.closest('.form-group').classList.add('success');
+      }
+
+      // 驗證密碼
+      if (!password.value || password.value.length < 8) {
+        password.closest('.form-group').classList.add('error');
+        isValid = false;
+      } else {
+        password.closest('.form-group').classList.add('success');
+      }
+
+      // 驗證確認密碼
+      if (password.value !== confirmPassword.value) {
+        confirmPassword.closest('.form-group').classList.add('error');
+        isValid = false;
+      } else if (confirmPassword.value) {
+        confirmPassword.closest('.form-group').classList.add('success');
+      }
 
       // 驗證姓名
       if (!name.value.trim()) {
         name.closest('.form-group').classList.add('error');
         isValid = false;
+      } else {
+        name.closest('.form-group').classList.add('success');
       }
 
       // 驗證電話
@@ -360,6 +562,8 @@
       if (!phone.value.trim() || !phoneRegex.test(phone.value)) {
         phone.closest('.form-group').classList.add('error');
         isValid = false;
+      } else {
+        phone.closest('.form-group').classList.add('success');
       }
 
       return isValid;
@@ -383,24 +587,39 @@
       button.disabled = false;
     }
 
-    // 顯示成功訊息
-    function showSuccessMessage() {
+    // 顯示成功訊息並跳轉
+    function showSuccessAndRedirect(userData) {
       const successMsg = document.getElementById('successMessage');
+      successMsg.textContent = '✅ 註冊成功！正在跳轉到主頁面...';
       successMsg.style.display = 'block';
+      
+      // 儲存登入狀態到內存
+      window.loginData = {
+        isLoggedIn: true,
+        userEmail: userData.email,
+        username: userData.name,
+        loginTime: new Date().toISOString(),
+        registrationData: userData
+      };
+      
       setTimeout(() => {
-        successMsg.style.display = 'none';
-      }, 3000);
+        window.location.href = '/'; // 跳轉到主頁面
+      }, 2000);
     }
 
-    async function saveProfile() {
+
+    // 註冊函數
+    async function registerUser() {
       if (!validateForm()) {
         return;
       }
 
-      const saveButton = document.querySelector('.btn-primary');
-      showLoading(saveButton);
+      const registerButton = document.querySelector('.btn-primary');
+      showLoading(registerButton);
 
-      const profile = {
+      const userData = {
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
         name: document.getElementById('name').value,
         phone: document.getElementById('phone').value,
         birth_date: document.getElementById('birth_date').value,
@@ -412,50 +631,66 @@
 
       try {
         // 模擬API延遲
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
-        const res = await fetch('/api/profile', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(profile),
-        });
+        // 這裡應該是實際的API調用
+        // const response = await fetch('/api/register', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify(userData),
+        // });
 
-        if (res.ok) {
-          showSuccessMessage();
-        } else if (res.status === 401) {
-          alert('未登入或會話已過期，請重新登入。');
-          location.reload();
-        } else {
-          alert('儲存失敗，請稍後再試。');
-        }
-      } catch (err) {
-        console.error('Failed to save profile:', err);
-        alert('儲存時發生錯誤。');
+        // 模擬成功註冊
+        console.log('註冊資料:', userData);
+        showSuccessAndRedirect();
+        
+      } catch (error) {
+        console.error('註冊失敗:', error);
+        alert('註冊時發生錯誤，請稍後再試。');
       } finally {
-        hideLoading(saveButton);
+        hideLoading(registerButton);
       }
     }
 
-    async function logout() {
-      if (confirm('確定要取消登入嗎？')) {
-        try {
-          await fetch('/auth/logout', { method: 'POST' });
-          // 清空表單
-          document.getElementById('profileForm').reset();
-          // 清除錯誤狀態
-          document.querySelectorAll('.form-group').forEach(group => {
-            group.classList.remove('error');
-          });
-        } catch (err) {
-          console.error('Failed to log out:', err);
-        }
+    // 取消註冊
+    function cancelRegister() {
+      if (confirm('確定要取消註冊嗎？已填寫的資料將會遺失。')) {
+        window.location.href = '/login';
       }
     }
+
+    // 密碼輸入時檢查強度
+    document.getElementById('password').addEventListener('input', function() {
+      const strengthIndicator = document.getElementById('passwordStrength');
+      if (this.value.length > 0) {
+        strengthIndicator.style.display = 'block';
+        checkPasswordStrength(this.value);
+      } else {
+        strengthIndicator.style.display = 'none';
+      }
+    });
 
     // 即時驗證
+    document.getElementById('email').addEventListener('blur', function() {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (this.value.trim() && emailRegex.test(this.value)) {
+        this.closest('.form-group').classList.remove('error');
+        this.closest('.form-group').classList.add('success');
+      }
+    });
+
+    document.getElementById('confirmPassword').addEventListener('blur', function() {
+      const password = document.getElementById('password').value;
+      if (this.value && this.value === password) {
+        this.closest('.form-group').classList.remove('error');
+        this.closest('.form-group').classList.add('success');
+      }
+    });
+
     document.getElementById('name').addEventListener('blur', function() {
       if (this.value.trim()) {
         this.closest('.form-group').classList.remove('error');
+        this.closest('.form-group').classList.add('success');
       }
     });
 
@@ -463,6 +698,7 @@
       const phoneRegex = /^[\d\-\(\)\+\s]+$/;
       if (this.value.trim() && phoneRegex.test(this.value)) {
         this.closest('.form-group').classList.remove('error');
+        this.closest('.form-group').classList.add('success');
       }
     });
   </script>
