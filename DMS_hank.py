@@ -679,11 +679,11 @@ class DMSSystem:
     def process_frame(self, image):
         """處理單幀圖像"""
         rgb_image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
-        img_h, img_w = image.shape[:2]
+        img_h, img_w = rgb_image.shape[:2]
         face_results = self.face_mesh.process(rgb_image)
         hands_res = self.hand_mesh.process(rgb_image)
         phone_near = False
-        if face_results.multi_face_landmarks and hands_res.multi_hand_landmarks:
+        if face_results.multi_face_landmarks and hands_res.multi_hand_landmarks:#先檢測有無臉部以及手部
             with self.data_lock:
                 self.mesh_points = np.array([np.multiply([p.x, p.y], [img_w, img_h]).astype(int)
                     for p in face_results.multi_face_landmarks[0].landmark])
@@ -697,15 +697,12 @@ class DMSSystem:
                 ear_right = ear_left # blinking_ratio calculates for both eyes
                 self.avg_ear = self.analyze_fatigue(ear_left, ear_right)
                 # 手機靠耳
-                face_landmarks = face_results.multi_face_landmarks[0].landmark
-                ear_left = np.array([face_landmarks[234].x * img_w, face_landmarks[234].y * img_h])
-                ear_right = np.array([face_landmarks[454].x * img_w, face_landmarks[454].y * img_h])
-                for handLms in hands_res.multi_hand_landmarks:
-                # 手掌外框: 使用所有手部 landmarks 計算外框
-                    hand_pts = np.array([[lm.x * img_w, lm.y * img_h] for lm in handLms.landmark], dtype=np.int32)
-                    x0, y0 = hand_pts.min(axis=0)
-                    x1, y1 = hand_pts.max(axis=0)
-                    cv.rectangle(rgb_image, (x0, y0), (x1, y1), (255, 0, 0), 2)  # 藍色方框
+                for handLms in hands_res.multi_hand_landmarks: #檢測手部
+                    face_landmarks = face_results.multi_face_landmarks[0].landmark
+                    ear_left = np.array([face_landmarks[234].x * img_w, face_landmarks[234].y * img_h])
+                    ear_right = np.array([face_landmarks[454].x * img_w, face_landmarks[454].y * img_h])
+                    # 手掌外框: 使用所有手部 landmarks 計算外框
+                    # hand_pts = np.array([[hl.x * img_w, hl.y * img_h] for hl in handLms.landmark]).astype(int)
                     # 手腕到耳朵距離
                     wrist = handLms.landmark[self.mp_hand_mesh.HandLandmark.WRIST]
                     wrist_pt = np.array([wrist.x * img_w, wrist.y * img_h])
