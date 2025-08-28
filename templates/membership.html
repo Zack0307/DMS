@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>會員資料</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px 30px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      animation: slideUp 0.6s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #718096;
+      font-size: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #4a5568;
+      font-size: 14px;
+      transition: color 0.3s ease;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 16px;
+      background: #ffffff;
+      color: #2d3748;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .form-group input:hover,
+    .form-group select:hover {
+      border-color: #cbd5e0;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .emergency-section {
+      margin-top: 30px;
+      padding-top: 25px;
+      border-top: 2px solid #f7fafc;
+    }
+
+    .emergency-section .section-title {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      color: #e53e3e;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .emergency-section .section-title::before {
+      content: "🚨";
+      margin-right: 8px;
+      font-size: 18px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 35px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f7fafc;
+      color: #4a5568;
+      border: 2px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+      background: #edf2f7;
+      border-color: #cbd5e0;
+      transform: translateY(-1px);
+    }
+
+    .loading {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: translate(-50%, -50%) rotate(360deg);
+      }
+    }
+
+    .success-message {
+      display: none;
+      background: linear-gradient(135deg, #48bb78, #38a169);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: center;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 30px 20px;
+        margin: 10px;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+    }
+
+    /* 表單驗證樣式 */
+    .form-group.error input,
+    .form-group.error select {
+      border-color: #e53e3e;
+      box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+    }
+
+    .error-message {
+      color: #e53e3e;
+      font-size: 12px;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .form-group.error .error-message {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>會員資料</h1>
+      <p>請填寫您的個人資訊</p>
+    </div>
+
+    <div class="success-message" id="successMessage">
+      ✅ 資料已成功儲存！
+    </div>
+
+    <form id="profileForm">
+      <div class="form-group">
+        <label for="name">姓名 *</label>
+        <input type="text" id="name" required />
+        <div class="error-message">請輸入姓名</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="phone">電話 *</label>
+          <input type="tel" id="phone" placeholder="0912-345-678" required />
+          <div class="error-message">請輸入有效的電話號碼</div>
+        </div>
+        <div class="form-group">
+          <label for="birth_date">生日</label>
+          <input type="date" id="birth_date" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="gender">性別</label>
+          <select id="gender">
+            <option value="">請選擇</option>
+            <option value="男">男性</option>
+            <option value="女">女性</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="address">地址</label>
+          <input type="text" id="address" placeholder="請輸入完整地址" />
+        </div>
+      </div>
+
+      <div class="emergency-section">
+        <div class="section-title">緊急聯絡資訊</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="emergency_contact">聯絡人姓名</label>
+            <input type="text" id="emergency_contact" placeholder="緊急聯絡人" />
+          </div>
+          <div class="form-group">
+            <label for="emergency_phone">聯絡人電話</label>
+            <input type="tel" id="emergency_phone" placeholder="0912-345-678" />
+          </div>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button type="button" class="btn btn-primary" onclick="saveProfile()">
+          <span class="btn-text">儲存資料</span>
+          <div class="loading"></div>
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="logout()">
+          登出
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // 表單驗證
+    function validateForm() {
+      const name = document.getElementById('name');
+      const phone = document.getElementById('phone');
+      let isValid = true;
+
+      // 清除之前的錯誤狀態
+      document.querySelectorAll('.form-group').forEach(group => {
+        group.classList.remove('error');
+      });
+
+      // 驗證姓名
+      if (!name.value.trim()) {
+        name.closest('.form-group').classList.add('error');
+        isValid = false;
+      }
+
+      // 驗證電話
+      const phoneRegex = /^[\d\-\(\)\+\s]+$/;
+      if (!phone.value.trim() || !phoneRegex.test(phone.value)) {
+        phone.closest('.form-group').classList.add('error');
+        isValid = false;
+      }
+
+      return isValid;
+    }
+
+    // 顯示載入狀態
+    function showLoading(button) {
+      const btnText = button.querySelector('.btn-text');
+      const loading = button.querySelector('.loading');
+      btnText.style.opacity = '0';
+      loading.style.display = 'block';
+      button.disabled = true;
+    }
+
+    // 隱藏載入狀態
+    function hideLoading(button) {
+      const btnText = button.querySelector('.btn-text');
+      const loading = button.querySelector('.loading');
+      btnText.style.opacity = '1';
+      loading.style.display = 'none';
+      button.disabled = false;
+    }
+
+    // 顯示成功訊息
+    function showSuccessMessage() {
+      const successMsg = document.getElementById('successMessage');
+      successMsg.style.display = 'block';
+      setTimeout(() => {
+        successMsg.style.display = 'none';
+      }, 3000);
+    }
+
+    async function saveProfile() {
+      if (!validateForm()) {
+        return;
+      }
+
+      const saveButton = document.querySelector('.btn-primary');
+      showLoading(saveButton);
+
+      const profile = {
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        birth_date: document.getElementById('birth_date').value,
+        gender: document.getElementById('gender').value,
+        address: document.getElementById('address').value,
+        emergency_contact: document.getElementById('emergency_contact').value,
+        emergency_phone: document.getElementById('emergency_phone').value,
+      };
+
+      try {
+        // 模擬API延遲
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const res = await fetch('/api/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(profile),
+        });
+
+        if (res.ok) {
+          showSuccessMessage();
+        } else if (res.status === 401) {
+          alert('未登入或會話已過期，請重新登入。');
+          location.reload();
+        } else {
+          alert('儲存失敗，請稍後再試。');
+        }
+      } catch (err) {
+        console.error('Failed to save profile:', err);
+        alert('儲存時發生錯誤。');
+      } finally {
+        hideLoading(saveButton);
+      }
+    }
+
+    async function logout() {
+      if (confirm('確定要登出嗎？')) {
+        try {
+          await fetch('/auth/logout', { method: 'POST' });
+          // 清空表單
+          document.getElementById('profileForm').reset();
+          // 清除錯誤狀態
+          document.querySelectorAll('.form-group').forEach(group => {
+            group.classList.remove('error');
+          });
+        } catch (err) {
+          console.error('Failed to log out:', err);
+        }
+      }
+    }
+
+    // 即時驗證
+    document.getElementById('name').addEventListener('blur', function() {
+      if (this.value.trim()) {
+        this.closest('.form-group').classList.remove('error');
+      }
+    });
+
+    document.getElementById('phone').addEventListener('blur', function() {
+      const phoneRegex = /^[\d\-\(\)\+\s]+$/;
+      if (this.value.trim() && phoneRegex.test(this.value)) {
+        this.closest('.form-group').classList.remove('error');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -809,6 +809,10 @@ dms.run_2d()  # 啟動 DMS 2d 系統
 def index():
     return render_template('DMS_hank.html')
 
+@app.route('/membership')
+def show_membership_page():
+    return render_template('membership.html')
+
 # 影像串流路由
 @app.route('/video_feed')
 def video_feed():
