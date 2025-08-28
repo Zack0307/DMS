@@ -2054,7 +2054,7 @@
                         
                         // 註冊成功後跳轉到會員資料頁
                         setTimeout(() => {
-                            window.location.href = "file:///./templates/membership.html";
+                            window.location.href = "/membership";
                         }, 1000);
                         
                     } else {
@@ -2130,7 +2130,7 @@
         
         if (user) {
             // 已登入，跳轉到會員資料頁
-            window.location.href = "file:///./templates/membership.html";
+            window.location.href = "/membership";
         } else {
             // 未登入，顯示提示
             const needLoginModal = document.getElementById('needLoginModal');

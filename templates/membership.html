@@ -327,11 +327,11 @@
 
       <div class="button-group">
         <button type="button" class="btn btn-primary" onclick="saveProfile()">
-          <span class="btn-text">儲存資料</span>
+          <span class="btn-text">註冊</span>
           <div class="loading"></div>
         </button>
         <button type="button" class="btn btn-secondary" onclick="logout()">
-          登出
+          取消
         </button>
       </div>
     </form>
@@ -437,7 +437,7 @@
     }
 
     async function logout() {
-      if (confirm('確定要登出嗎？')) {
+      if (confirm('確定要取消登入嗎？')) {
         try {
           await fetch('/auth/logout', { method: 'POST' });
           // 清空表單
