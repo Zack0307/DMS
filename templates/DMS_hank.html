@@ -1100,7 +1100,7 @@
                 <div class="profile-header">
                     <div class="profile-avatar">JD</div>
                     <div class="profile-info">
-                        <h3>John Doe</h3>
+                        <h3 id="userName"></h3>
                         <p>駕照: DL-789456123</p>
                     </div>
                 </div>
@@ -1270,7 +1270,7 @@
     <div class="sidebar-menu" id="sidebarMenu">
         <div class="menu-header">
             <h2>會員中心</h2>
-            <div class="status" id="userStatus">尚未登入</div>
+            <div class="status" id="userEmail">尚未登入</div>
         </div>
 
         <!-- 未登入時顯示 -->
@@ -2242,15 +2242,18 @@
             const authSection = document.getElementById('authSection');
             const userSection = document.getElementById('userSection');
             const logoutSection = document.getElementById('logoutSection');
-            const userStatus = document.getElementById('userStatus');
+            const userEmail = document.getElementById('userEmail');
             const authIndicator = document.getElementById('authIndicator');
+            const userData = JSON.parse(localStorage.getItem('user_data'));
+            const UserName = document.getElementById('userName');
             
-            if (isLoggedIn) {
+            if (isLoggedIn && userData) {
                 authSection.style.display = 'none';
                 userSection.style.display = 'block';
                 logoutSection.style.display = 'block';
                 // 使用實際的用戶email，如果沒有則使用預設值
-                userStatus.textContent = `已登入：${currentUserEmail || 'user@example.com'}`;
+                UserName.textContent = userData.name || '使用者';
+                userEmail.textContent = `已登入：${userData.email || 'user@example.com'}`;
                 authIndicator.classList.add('logged-in');
             } else {
                 authSection.style.display = 'block';

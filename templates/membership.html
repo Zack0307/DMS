@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>會員註冊</title>
+  <title>會員註冊 | TechDrive</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
     * {
       margin: 0;
       padding: 0;
@@ -12,35 +14,100 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a0a;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
+      overflow-x: hidden;
     }
+
+    /* 移除動態背景：註釋掉或刪除以下部分 */
+    
+    .background-wrapper {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      overflow: hidden;
+    }
+
+    .background-wrapper::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(0, 255, 255, 0.03) 0%, transparent 60%),
+        radial-gradient(circle at 80% 70%, rgba(255, 0, 255, 0.03) 0%, transparent 60%),
+        radial-gradient(circle at 50% 50%, rgba(0, 255, 100, 0.01) 0%, transparent 60%);
+      animation: gradient 60s ease infinite;
+      z-index: -1;
+    }
+
+    @keyframes gradient {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      33% { transform: scale(1.03) rotate(30deg); }
+      66% { transform: scale(0.97) rotate(60deg); }
+    }
+
+    .background-wrapper::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(0, 255, 255, 0.005) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.005) 1px, transparent 1px);
+      background-size: 150px 150px;
+      z-index: -1;
+      animation: gridMove 90s linear infinite;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(150px, 150px); }
+    }
+    
 
     .container {
       width: 100%;
-      max-width: 520px;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
+      max-width: 560px;
+      background: rgba(15, 15, 15, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
       padding: 40px 30px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      animation: slideUp 0.6s ease-out;
+      box-shadow: 
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      animation: containerGlow 4s ease-in-out infinite alternate;
+      position: relative;
     }
 
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
+    @keyframes containerGlow {
+      0% { 
+        box-shadow: 
+          0 0 0 1px rgba(255, 255, 255, 0.1),
+          0 20px 60px rgba(0, 0, 0, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1),
+          0 0 20px rgba(0, 255, 255, 0.1);
       }
-      to {
-        opacity: 1;
-        transform: translateY(0);
+      100% { 
+        box-shadow: 
+          0 0 0 1px rgba(255, 255, 255, 0.1),
+          0 20px 60px rgba(0, 0, 0, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1),
+          0 0 30px rgba(0, 255, 255, 0.2);
       }
     }
 
@@ -50,15 +117,27 @@
     }
 
     .header h1 {
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 700;
-      color: #2d3748;
+      background: linear-gradient(135deg, #00ffff, #ff00ff, #00ff64);
+      background-size: 200% 200%;
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientText 3s ease infinite;
       margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    @keyframes gradientText {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
     }
 
     .header p {
-      color: #718096;
+      color: rgba(255, 255, 255, 0.7);
       font-size: 16px;
+      font-weight: 300;
     }
 
     .form-group {
@@ -69,39 +148,50 @@
     .form-group label {
       display: block;
       margin-bottom: 8px;
-      font-weight: 600;
-      color: #4a5568;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.9);
       font-size: 14px;
       transition: color 0.3s ease;
-    }
-
-    .input-wrapper {
-      position: relative;
     }
 
     .form-group input,
     .form-group select {
       width: 100%;
-      padding: 14px 16px;
-      border: 2px solid #e2e8f0;
-      border-radius: 12px;
+      padding: 16px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
       font-size: 16px;
-      background: #ffffff;
-      color: #2d3748;
+      background: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
       transition: all 0.3s ease;
       outline: none;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .form-group input::placeholder,
+    .form-group select option {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .form-group select option {
+      background: #1a1a1a;
+      color: #ffffff;
     }
 
     .form-group input:focus,
     .form-group select:focus {
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      border-color: #00ffff;
+      box-shadow: 
+        0 0 0 1px #00ffff,
+        0 0 20px rgba(0, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.08);
       transform: translateY(-2px);
     }
 
     .form-group input:hover,
     .form-group select:hover {
-      border-color: #cbd5e0;
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.07);
     }
 
     .password-wrapper {
@@ -116,39 +206,45 @@
       background: none;
       border: none;
       cursor: pointer;
-      color: #666;
-      font-size: 14px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 16px;
       padding: 5px;
-      transition: color 0.3s ease;
+      transition: all 0.3s ease;
+      border-radius: 8px;
     }
 
     .toggle-password:hover {
-      color: #667eea;
+      color: #00ffff;
+      background: rgba(0, 255, 255, 0.1);
     }
 
     .password-strength {
-      margin-top: 8px;
+      margin-top: 12px;
       display: none;
     }
 
     .password-strength-bar {
-      height: 4px;
-      background: #e2e8f0;
-      border-radius: 2px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
       overflow: hidden;
       margin-bottom: 8px;
+      position: relative;
     }
 
     .password-strength-fill {
       height: 100%;
-      border-radius: 2px;
-      transition: all 0.3s ease;
+      border-radius: 3px;
+      transition: all 0.4s ease;
       width: 0%;
+      background: linear-gradient(90deg, #ff4757, #ffa502, #2ed573, #00ffff);
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
     }
 
     .password-strength-text {
       font-size: 12px;
-      color: #718096;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 500;
     }
 
     .form-row {
@@ -158,43 +254,84 @@
     }
 
     .emergency-section {
-      margin-top: 30px;
-      padding-top: 25px;
-      border-top: 2px solid #f7fafc;
+      margin-top: 35px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(255, 0, 255, 0.2);
+      position: relative;
     }
 
-    .emergency-section .section-title {
+    .emergency-section::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #ff00ff, transparent);
+    }
+
+    .section-title {
       display: flex;
       align-items: center;
       margin-bottom: 20px;
-      color: #e53e3e;
+      color: #ff00ff;
       font-weight: 600;
       font-size: 16px;
     }
 
-    .emergency-section .section-title::before {
-      content: "🚨";
+    .section-title::before {
+      content: "⚡";
       margin-right: 8px;
       font-size: 18px;
+      filter: drop-shadow(0 0 5px #ff00ff);
+    }
+
+    .license-section {
+      margin-top: 25px;
+      padding: 20px;
+      background: rgba(0, 255, 255, 0.05);
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      border-radius: 16px;
+      position: relative;
+    }
+
+    .license-section::before {
+      content: '🚗';
+      position: absolute;
+      top: -15px;
+      left: 20px;
+      font-size: 24px;
+      filter: drop-shadow(0 0 10px #00ffff);
+    }
+
+    .license-title {
+      color: #00ffff;
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 15px;
+      margin-left: 35px;
     }
 
     .button-group {
       display: flex;
-      gap: 12px;
-      margin-top: 35px;
+      gap: 15px;
+      margin-top: 40px;
     }
 
     .btn {
       flex: 1;
-      padding: 14px 20px;
+      padding: 16px 24px;
       border: none;
-      border-radius: 12px;
+      border-radius: 16px;
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      letter-spacing: 0.5px;
     }
 
     .btn::before {
@@ -205,7 +342,7 @@
       width: 100%;
       height: 100%;
       background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: left 0.5s;
+      transition: left 0.6s;
     }
 
     .btn:hover::before {
@@ -213,26 +350,39 @@
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      background: linear-gradient(135deg, #00ffff, #0080ff, #ff00ff);
+      background-size: 200% 200%;
+      color: #000000;
+      box-shadow: 
+        0 8px 25px rgba(0, 255, 255, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      animation: buttonGradient 3s ease infinite;
+    }
+
+    @keyframes buttonGradient {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
     }
 
     .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+      transform: translateY(-3px);
+      box-shadow: 
+        0 12px 35px rgba(0, 255, 255, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
     }
 
     .btn-secondary {
-      background: #f7fafc;
-      color: #4a5568;
-      border: 2px solid #e2e8f0;
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
     }
 
     .btn-secondary:hover {
-      background: #edf2f7;
-      border-color: #cbd5e0;
-      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
     }
 
     .loading {
@@ -241,11 +391,11 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      width: 22px;
+      height: 22px;
+      border: 2px solid rgba(0, 0, 0, 0.3);
       border-radius: 50%;
-      border-top-color: white;
+      border-top-color: #000000;
       animation: spin 1s linear infinite;
     }
 
@@ -257,19 +407,21 @@
 
     .success-message {
       display: none;
-      background: linear-gradient(135deg, #48bb78, #38a169);
-      color: white;
-      padding: 12px 16px;
-      border-radius: 8px;
-      margin-bottom: 20px;
+      background: linear-gradient(135deg, #00ff64, #00cc51);
+      color: #000000;
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin-bottom: 25px;
       text-align: center;
-      animation: slideDown 0.3s ease-out;
+      font-weight: 600;
+      animation: slideDown 0.4s ease-out;
+      box-shadow: 0 0 20px rgba(0, 255, 100, 0.3);
     }
 
     @keyframes slideDown {
       from {
         opacity: 0;
-        transform: translateY(-10px);
+        transform: translateY(-15px);
       }
       to {
         opacity: 1;
@@ -279,27 +431,87 @@
 
     .footer-links {
       text-align: center;
-      margin-top: 20px;
-      padding-top: 20px;
-      border-top: 1px solid #e2e8f0;
+      margin-top: 25px;
+      padding-top: 25px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .footer-links a {
-      color: #667eea;
+      color: #00ffff;
       text-decoration: none;
       font-size: 14px;
-      transition: color 0.3s ease;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .footer-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #00ffff, #ff00ff);
+      transition: width 0.3s ease;
     }
 
     .footer-links a:hover {
-      color: #764ba2;
-      text-decoration: underline;
+      color: #ff00ff;
+      transform: translateY(-1px);
     }
 
+    .footer-links a:hover::after {
+      width: 100%;
+    }
+
+    /* 表單驗證樣式 */
+    .form-group.error input,
+    .form-group.error select {
+      border-color: #ff4757;
+      box-shadow: 0 0 0 1px #ff4757, 0 0 15px rgba(255, 71, 87, 0.3);
+      background: rgba(255, 71, 87, 0.05);
+    }
+
+    .error-message {
+      color: #ff4757;
+      font-size: 12px;
+      margin-top: 6px;
+      display: none;
+      font-weight: 500;
+    }
+
+    .form-group.error .error-message {
+      display: block;
+      animation: shake 0.3s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .form-group.success input,
+    .form-group.success select {
+      border-color: #00ff64;
+      box-shadow: 0 0 0 1px #00ff64, 0 0 15px rgba(0, 255, 100, 0.2);
+      background: rgba(0, 255, 100, 0.05);
+    }
+
+    /* 浮動標籤效果 */
+    .form-group.focused label,
+    .form-group.filled label {
+      color: #00ffff;
+      transform: translateY(-2px);
+    }
+
+    /* 響應式設計 */
     @media (max-width: 600px) {
       .container {
         padding: 30px 20px;
         margin: 10px;
+        border-radius: 20px;
       }
 
       .form-row {
@@ -308,57 +520,95 @@
       }
 
       .header h1 {
-        font-size: 24px;
+        font-size: 28px;
+      }
+
+      .button-group {
+        flex-direction: column;
       }
     }
 
-    /* 表單驗證樣式 */
-    .form-group.error input,
-    .form-group.error select {
-      border-color: #e53e3e;
-      box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+    /* 懸浮效果 */
+    .form-group:hover label {
+      color: rgba(0, 255, 255, 0.8);
     }
 
-    .error-message {
-      color: #e53e3e;
-      font-size: 12px;
-      margin-top: 4px;
-      display: none;
+    /* 輸入框圖標 */
+    .input-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255, 255, 255, 0.4);
+      transition: color 0.3s ease;
+      pointer-events: none;
     }
 
-    .form-group.error .error-message {
-      display: block;
+    .form-group.focused .input-icon,
+    .form-group.filled .input-icon {
+      color: #00ffff;
     }
 
-    .form-group.success input {
-      border-color: #38a169;
-      box-shadow: 0 0 0 3px rgba(56, 161, 105, 0.1);
+    .input-with-icon {
+      padding-left: 50px !important;
+    }
+
+    /* 特殊效果 */
+    .tech-border {
+      position: relative;
+    }
+
+    .tech-border::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 16px;
+      padding: 1px;
+      background: linear-gradient(45deg, transparent, #00ffff, transparent, #ff00ff, transparent);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .form-group.focused .tech-border::before {
+      opacity: 1;
     }
   </style>
 </head>
 <body>
+  <!-- 移除背景包装器 -->
+  <!-- <div class="background-wrapper"></div> -->
+
   <div class="container">
     <div class="header">
       <h1>會員註冊</h1>
-      <p>請填寫您的註冊資訊</p>
+      <p>加入未來駕駛體驗</p>
     </div>
 
     <div class="success-message" id="successMessage">
-      ✅ 註冊成功！正在跳轉到登入頁面...
+      ✅ 註冊成功！正在啟動系統...
     </div>
 
     <form id="registerForm">
       <!-- 帳號密碼區域 -->
       <div class="form-group">
         <label for="email">註冊信箱 *</label>
-        <input type="email" id="email" placeholder="請輸入您的Email" required />
+        <div class="tech-border">
+          <span class="input-icon">📧</span>
+          <input type="email" id="email" class="input-with-icon" placeholder="your.email@example.com" required />
+        </div>
         <div class="error-message">請輸入有效的Email地址</div>
       </div>
 
       <div class="form-group">
-        <label for="password">密碼 *</label>
-        <div class="password-wrapper">
-          <input type="password" id="password" placeholder="請輸入密碼 (至少8個字元)" required />
+        <label for="password">系統密碼 *</label>
+        <div class="password-wrapper tech-border">
+          <span class="input-icon">🔐</span>
+          <input type="password" id="password" class="input-with-icon" placeholder="至少8個字元，建議包含數字及符號" required />
           <button type="button" class="toggle-password" onclick="togglePassword('password')">👁️</button>
         </div>
         <div class="password-strength" id="passwordStrength">
@@ -372,8 +622,9 @@
 
       <div class="form-group">
         <label for="confirmPassword">確認密碼 *</label>
-        <div class="password-wrapper">
-          <input type="password" id="confirmPassword" placeholder="請再次輸入密碼" required />
+        <div class="password-wrapper tech-border">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="confirmPassword" class="input-with-icon" placeholder="請再次輸入密碼" required />
           <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword')">👁️</button>
         </div>
         <div class="error-message">密碼不一致</div>
@@ -381,49 +632,84 @@
 
       <!-- 基本資料區域 -->
       <div class="form-group">
-        <label for="name">姓名 *</label>
-        <input type="text" id="name" placeholder="請輸入您的姓名" required />
+        <label for="name">使用者姓名 *</label>
+        <div class="tech-border">
+          <span class="input-icon">👤</span>
+          <input type="text" id="name" class="input-with-icon" placeholder="請輸入您的真實姓名" required />
+        </div>
         <div class="error-message">請輸入姓名</div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label for="phone">電話 *</label>
-          <input type="tel" id="phone" placeholder="0912-345-678" required />
+          <label for="phone">聯絡電話 *</label>
+          <div class="tech-border">
+            <span class="input-icon">📱</span>
+            <input type="tel" id="phone" class="input-with-icon" placeholder="0912-345-678" required />
+          </div>
           <div class="error-message">請輸入有效的電話號碼</div>
         </div>
         <div class="form-group">
           <label for="birth_date">生日</label>
-          <input type="date" id="birth_date" />
+          <div class="tech-border">
+            <span class="input-icon">🎂</span>
+            <input type="date" id="birth_date" class="input-with-icon" />
+          </div>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
           <label for="gender">性別</label>
-          <select id="gender">
-            <option value="">請選擇</option>
-            <option value="男">男性</option>
-            <option value="女">女性</option>
-            <option value="其他">其他</option>
-          </select>
+          <div class="tech-border">
+            <span class="input-icon">⚧</span>
+            <select id="gender" class="input-with-icon">
+              <option value="">請選擇</option>
+              <option value="男">男性</option>
+              <option value="女">女性</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
         </div>
         <div class="form-group">
-          <label for="address">地址</label>
-          <input type="text" id="address" placeholder="請輸入完整地址" />
+          <label for="address">居住地址</label>
+          <div class="tech-border">
+            <span class="input-icon">🏠</span>
+            <input type="text" id="address" class="input-with-icon" placeholder="請輸入完整地址" />
+          </div>
         </div>
       </div>
 
+      <!-- 駕駛資訊區域 -->
+      <div class="license-section">
+        <div class="license-title">駕駛資訊</div>
+        <div class="form-group">
+          <label for="license_number">駕駛執照號碼</label>
+          <div class="tech-border">
+            <span class="input-icon">🆔</span>
+            <input type="text" id="license_number" class="input-with-icon" placeholder="例：A123456789" />
+          </div>
+          <div class="error-message">請輸入有效的駕照號碼</div>
+        </div>
+      </div>
+
+      <!-- 緊急聯絡區域 -->
       <div class="emergency-section">
         <div class="section-title">緊急聯絡資訊</div>
         <div class="form-row">
           <div class="form-group">
-            <label for="emergency_contact">聯絡人姓名</label>
-            <input type="text" id="emergency_contact" placeholder="緊急聯絡人" />
+            <label for="emergency_contact">緊急聯絡人</label>
+            <div class="tech-border">
+              <span class="input-icon">🆘</span>
+              <input type="text" id="emergency_contact" class="input-with-icon" placeholder="緊急聯絡人姓名" />
+            </div>
           </div>
           <div class="form-group">
-            <label for="emergency_phone">聯絡人電話</label>
-            <input type="tel" id="emergency_phone" placeholder="0912-345-678" />
+            <label for="emergency_phone">緊急聯絡電話</label>
+            <div class="tech-border">
+              <span class="input-icon">📞</span>
+              <input type="tel" id="emergency_phone" class="input-with-icon" placeholder="0912-345-678" />
+            </div>
           </div>
         </div>
       </div>
@@ -434,13 +720,13 @@
           <div class="loading"></div>
         </button>
         <button type="button" class="btn btn-secondary" onclick="cancelRegister()">
-          取消
+          返回
         </button>
       </div>
     </form>
 
     <div class="footer-links">
-      <a href="login.html">已有帳號？立即登入</a>
+      <a href="/login">已有帳號？立即登入</a>
     </div>
   </div>
 
@@ -477,37 +763,45 @@
       switch (strength) {
         case 0:
         case 1:
-          strengthText = '密碼強度：很弱';
-          color = '#e53e3e';
+          strengthText = '安全等級：低';
+          color = '#ff4757';
           strengthFill.style.width = '20%';
           break;
         case 2:
-          strengthText = '密碼強度：弱';
-          color = '#ed8936';
+          strengthText = '安全等級：中低';
+          color = '#ffa502';
           strengthFill.style.width = '40%';
           break;
         case 3:
-          strengthText = '密碼強度：中等';
-          color = '#ecc94b';
+          strengthText = '安全等級：中等';
+          color = '#f39c12';
           strengthFill.style.width = '60%';
           break;
         case 4:
-          strengthText = '密碼強度：強';
-          color = '#38a169';
+          strengthText = '安全等級：高';
+          color = '#2ed573';
           strengthFill.style.width = '80%';
           break;
         case 5:
-          strengthText = '密碼強度：很強';
-          color = '#38a169';
+          strengthText = '安全等級：極高';
+          color = '#00ffff';
           strengthFill.style.width = '100%';
           break;
       }
 
-      strengthFill.style.backgroundColor = color;
+      strengthFill.style.background = `linear-gradient(90deg, ${color}, ${color})`;
+      strengthFill.style.boxShadow = `0 0 10px ${color}40`;
       strengthTextEl.textContent = strengthText;
       strengthTextEl.style.color = color;
 
       return strength >= 2;
+    }
+
+    // 駕照號碼格式驗證
+    function validateLicenseNumber(licenseNumber) {
+      // 台灣駕照格式：英文字母+數字（例：A123456789）
+      const licenseRegex = /^[A-Z]\d{8,9}$/;
+      return !licenseNumber || licenseRegex.test(licenseNumber.toUpperCase());
     }
 
     // 表單驗證
@@ -517,6 +811,7 @@
       const confirmPassword = document.getElementById('confirmPassword');
       const name = document.getElementById('name');
       const phone = document.getElementById('phone');
+      const licenseNumber = document.getElementById('license_number');
       let isValid = true;
 
       // 清除之前的錯誤狀態
@@ -566,6 +861,14 @@
         phone.closest('.form-group').classList.add('success');
       }
 
+      // 驗證駕照號碼（選填，但如果有填就要格式正確）
+      if (licenseNumber.value.trim() && !validateLicenseNumber(licenseNumber.value)) {
+        licenseNumber.closest('.form-group').classList.add('error');
+        isValid = false;
+      } else if (licenseNumber.value.trim()) {
+        licenseNumber.closest('.form-group').classList.add('success');
+      }
+
       return isValid;
     }
 
@@ -590,7 +893,7 @@
     // 顯示成功訊息並跳轉
     function showSuccessAndRedirect(userData) {
       const successMsg = document.getElementById('successMessage');
-      successMsg.textContent = '✅ 註冊成功！正在跳轉到主頁面...';
+      successMsg.textContent = '✅ 系統註冊完成！正在初始化用戶資料...';
       successMsg.style.display = 'block';
       
       // 儲存登入狀態到內存
@@ -606,7 +909,6 @@
         window.location.href = '/'; // 跳轉到主頁面
       }, 2000);
     }
-
 
     // 註冊函數
     async function registerUser() {
@@ -625,6 +927,7 @@
         birth_date: document.getElementById('birth_date').value,
         gender: document.getElementById('gender').value,
         address: document.getElementById('address').value,
+        license_number: document.getElementById('license_number').value,
         emergency_contact: document.getElementById('emergency_contact').value,
         emergency_phone: document.getElementById('emergency_phone').value,
       };
@@ -639,14 +942,14 @@
         //   headers: { 'Content-Type': 'application/json' },
         //   body: JSON.stringify(userData),
         // });
-
+        
         // 模擬成功註冊
         console.log('註冊資料:', userData);
-        showSuccessAndRedirect();
+        showSuccessAndRedirect(userData);
         
       } catch (error) {
         console.error('註冊失敗:', error);
-        alert('註冊時發生錯誤，請稍後再試。');
+        alert('系統註冊時發生錯誤，請稍後再試。');
       } finally {
         hideLoading(registerButton);
       }
@@ -654,10 +957,39 @@
 
     // 取消註冊
     function cancelRegister() {
-      if (confirm('確定要取消註冊嗎？已填寫的資料將會遺失。')) {
+      if (confirm('確定要離開註冊程序嗎？已填寫的資料將會遺失。')) {
         window.location.href = '/login';
       }
     }
+
+    // 輸入框焦點效果
+    function addFocusEffects() {
+      const inputs = document.querySelectorAll('input, select');
+      inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+          this.closest('.form-group').classList.add('focused');
+        });
+
+        input.addEventListener('blur', function() {
+          this.closest('.form-group').classList.remove('focused');
+          if (this.value.trim()) {
+            this.closest('.form-group').classList.add('filled');
+          } else {
+            this.closest('.form-group').classList.remove('filled');
+          }
+        });
+
+        // 初始檢查是否已有值
+        if (input.value.trim()) {
+          input.closest('.form-group').classList.add('filled');
+        }
+      });
+    }
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      addFocusEffects();
+    });
 
     // 密碼輸入時檢查強度
     document.getElementById('password').addEventListener('input', function() {
@@ -700,6 +1032,24 @@
         this.closest('.form-group').classList.remove('error');
         this.closest('.form-group').classList.add('success');
       }
+    });
+
+    // 駕照號碼即時驗證
+    document.getElementById('license_number').addEventListener('blur', function() {
+      if (this.value.trim()) {
+        if (validateLicenseNumber(this.value)) {
+          this.closest('.form-group').classList.remove('error');
+          this.closest('.form-group').classList.add('success');
+        } else {
+          this.closest('.form-group').classList.add('error');
+        }
+      }
+    });
+
+    // 駕照號碼輸入格式化
+    document.getElementById('license_number').addEventListener('input', function() {
+      // 自動轉為大寫
+      this.value = this.value.toUpperCase();
     });
   </script>
 </body>
