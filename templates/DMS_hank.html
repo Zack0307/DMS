@@ -1189,11 +1189,11 @@
                         </div>
                         <div class="metric-card">
                             <h5>行駛時間</h5>
-                            <span class="value" id="route-duration-hours">--</span><span class="unit">--</span>
+                            <span class="value" id="route-duration-hours">--</span><span class="unit"></span>
                         </div>
                         <div class="metric-card">
                             <h5>行駛距離</h5>
-                            <span class="value" id="route-distance">--</span><span class="unit">km</span>
+                            <span class="value" id="route-distance">--</span><span class="unit"></span>
                         </div>
                     </div>
 
@@ -1505,7 +1505,7 @@
                         element.classList.add('metric-normal');
                     } else if (headPose === 'Left' || headPose === 'Right') {
                         element.classList.add('metric-warning');
-                    } else if (headPose === 'Down') {
+                    } else if (headPose === 'Down' || headPose === 'Up') {
                         element.classList.add('metric-critical');
                     }
                 }
@@ -1817,7 +1817,7 @@
             const distanceEl = document.getElementById("route-distance");
             
             if (durationEl) durationEl.textContent = duration.replace(/\s*小時/, 'hrs').replace(/\s*分鐘/, 'mins');
-            if (distanceEl) distanceEl.textContent = distance.replace(/\s*公里/, '');
+            if (distanceEl) distanceEl.textContent = distance.replace(/\s*公里/, 'km');
         }
 
         function showNotification(message, type = 'info') {
