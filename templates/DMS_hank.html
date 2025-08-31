@@ -495,7 +495,7 @@
         .chat-container {
             display: none;
             flex-direction: column;
-            max-height: calc(100vh - 120px); /* 限制整體高度 */
+            max-height: calc(100vh - 120px);
             height: 100%;
             overflow-y: auto;
         }
@@ -522,7 +522,7 @@
 
         .chat-box {
             flex: 1;
-            overflow-y: auto; /* 強制顯示垂直滾輪 */
+            overflow-y: auto;
             overflow-x: hidden; 
             padding: 20px;
             display: flex;
@@ -712,10 +712,10 @@
             overflow: hidden;
             white-space: nowrap;
             padding: 10px;
-            transition: background-color 0.3s; /* 平滑背景變化 */
+            transition: background-color 0.3s;
         }
         .recent-alerts.has-alerts {
-            background-color: #FFFF00; /* 有警報時黃色背景 */
+            background-color: #FFFF00;
         }
         .recent-alerts .marquee-content {
             display: inline-block;
@@ -833,7 +833,7 @@
                 transform: translate(-50%, 0); 
             }
         }
-        /* 🍔 漢堡選單按鈕 */
+        /* 漢堡選單按鈕 */
         .hamburger-btn {
             position: fixed;
             top: 20px;
@@ -882,7 +882,7 @@
             transform: rotate(-45deg) translate(6px, -6px);
         }
 
-        /* 🎯 側邊選單 */
+        /* 側邊選單 */
         .sidebar-menu {
             position: fixed;
             top: 0;
@@ -1010,7 +1010,8 @@
             opacity: 1;
             visibility: visible;
         }
-        /* 🎨 主要內容區域 */
+
+        /* 主要內容區域 */
         .main-content {
             padding: 100px 20px 20px 20px;
             max-width: 800px;
@@ -1038,7 +1039,7 @@
             line-height: 1.6;
         }
 
-        /* 🔔 通知樣式 */
+        /* 通知樣式 */
         .notification {
             position: fixed;
             top: 20px;
@@ -1061,7 +1062,7 @@
             background: #e53e3e;
         }
 
-        /* 🎭 登入狀態指示器 */
+        /* 登入狀態指示器 */
         .auth-indicator {
             position: absolute;
             top: 10px;
@@ -1100,7 +1101,7 @@
                 <div class="profile-header">
                     <div class="profile-avatar">JD</div>
                     <div class="profile-info">
-                        <h3 id="userName"></h3>
+                        <h3 id="userName">駕駛員</h3>
                         <p>駕照: DL-789456123</p>
                     </div>
                 </div>
@@ -1109,7 +1110,7 @@
                     <span id="work-status">執行勤務中</span>
                 </div>
                 <div class="work-toggle">
-                    <button id="dutu-off-button">下班</button>
+                    <button id="duty-off-button">下班</button>
                 </div>
             </div>
 
@@ -1188,7 +1189,7 @@
                         </div>
                         <div class="metric-card">
                             <h5>行駛時間</h5>
-                            <span class="value" id="route-duration-hours">--<span class="unit">--</span>
+                            <span class="value" id="route-duration-hours">--</span><span class="unit">--</span>
                         </div>
                         <div class="metric-card">
                             <h5>行駛距離</h5>
@@ -1243,19 +1244,20 @@
                 </div>
                 <div class="chat-input">
                     <input type="text" id="userInput" placeholder="輸入您的訊息..." onkeypress="handleChatEnter(event)">
-                    <button type='button'>發送</button>
+                    <button onclick="sendMessage()" type="button">發送</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- 警報跑馬燈 -->
-    <div class="system-marquee-content" >
+    <div class="system-marquee-content">
         <div class="system-marquee">
             ⚠️ 系統正常運行中，持續監控駕駛狀態...
         </div>
     </div>
 
+    <!-- 漢堡選單按鈕 -->
     <button class="hamburger-btn" onclick="toggleMenu()">
         <div class="hamburger-line"></div>
         <div class="hamburger-line"></div>
@@ -1309,50 +1311,93 @@
     <!-- 通知 -->
     <div class="notification" id="notification"></div>
 
-
     <!-- Google Maps API -->
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyADv6rM97_fP3lrVxCDfi6NhPbdG1EMEs0&callback=initMap"></script>
 
+    <!-- 核心 JavaScript 程式碼 - 修復版本 -->
     <script>
-        // ===== 全域變數 =====
+        // ===== 全域變數宣告 =====
         let map, directionsService, directionsRenderer;
         let isWorking = true;
         let chatHistory = [];
         let updateIntervals = {};
+        let dashboardApp; // 確保單一實例
 
-        // ===== 應用程式初始化 =====
+        // ===== 主要儀表板應用程式類別 =====
         class DashboardApp {
             constructor() {
+                console.log('🚀 初始化 DashboardApp...');
+                this.isInitialized = false;
                 this.init();
                 this.setupEventListeners();
                 this.startUpdateCycles();
             }
 
             init() {
+                console.log('⚙️ 初始化基本功能...');
                 this.setThemeByTime();
                 this.updateTime();
                 this.updateData();
-                this.fetchEvents();
                 this.updateAlertTicker();
+                this.isInitialized = true;
+                console.log('✅ DashboardApp 初始化完成');
             }
 
             setupEventListeners() {
-                // 工作狀態切換
-                document.getElementById('duty-off-button').addEventListener('click', (e) => this.toggleWorkStatus(e));
+                console.log('📡 設定事件監聽器...');
                 
+                // 工作狀態切換 - 使用更安全的選擇器
+                const dutyButton = document.getElementById('duty-off-button');
+                if (dutyButton) {
+                    // 移除舊的監聽器（如果存在）
+                    dutyButton.removeEventListener('click', this.toggleWorkStatusHandler);
+                    // 綁定新的監聽器
+                    this.toggleWorkStatusHandler = (e) => this.toggleWorkStatus(e);
+                    dutyButton.addEventListener('click', this.toggleWorkStatusHandler);
+                }
+
                 // 聊天輸入監聽
                 const chatInput = document.getElementById('userInput');
                 if (chatInput) {
-                    chatInput.addEventListener('keypress', this.handleChatEnter);
+                    chatInput.removeEventListener('keypress', this.handleChatEnterHandler);
+                    this.handleChatEnterHandler = (e) => this.handleChatEnter(e);
+                    chatInput.addEventListener('keypress', this.handleChatEnterHandler);
                 }
             }
 
             startUpdateCycles() {
+                console.log('🔄 啟動更新週期...');
+                
+                // 清除現有的 intervals（防止重複）
+                this.clearUpdateIntervals();
+
                 // 設定各種更新週期
-                updateIntervals.data = setInterval(() => this.updateData(), 1000);
-                updateIntervals.time = setInterval(() => this.updateTime(), 1000);
-                updateIntervals.events = setInterval(() => this.fetchEvents(), 2000);
-                updateIntervals.alerts = setInterval(() => this.updateAlertTicker(), 3000);
+                updateIntervals.data = setInterval(() => {
+                    if (this.isInitialized) {
+                        this.updateData();
+                    }
+                }, 1000);
+
+                updateIntervals.time = setInterval(() => {
+                    if (this.isInitialized) {
+                        this.updateTime();
+                    }
+                }, 1000);
+
+                updateIntervals.alerts = setInterval(() => {
+                    if (this.isInitialized) {
+                        this.updateAlertTicker();
+                    }
+                }, 3000);
+
+                console.log('✅ 更新週期已啟動');
+            }
+
+            clearUpdateIntervals() {
+                Object.values(updateIntervals).forEach(intervalId => {
+                    if (intervalId) clearInterval(intervalId);
+                });
+                updateIntervals = {};
             }
 
             // 根據時間設定主題
@@ -1400,7 +1445,8 @@
                     this.showConnectionError();
                 }
             }
-            // 即時偵測數據
+
+            // 更新即時偵測數據
             updateMetrics(data) {
                 const metrics = {
                     fatigueLevel: data.fatigue_level?.toFixed(2) || '--',
@@ -1433,7 +1479,7 @@
                 
                 switch(key) {
                     case 'fatigueLevel':
-                        if ( numValue > 0.7) status = 'critical';
+                        if (numValue > 0.7) status = 'critical';
                         else if (numValue > 0.5) status = 'warning';
                         break;
                     case 'attentionLevel':
@@ -1452,73 +1498,35 @@
             updateHeadPose(headPose) {
                 const element = document.getElementById('headPose');
                 if (element) {
-                    element.textContent = headPose || '--';  // 顯示字串
+                    element.textContent = headPose || '--';
+                    element.classList.remove('metric-warning', 'metric-critical', 'metric-normal');
+                    
                     if (headPose === 'Forward') {
-                        element.classList.remove('metric-warning', 'metric-critical');
                         element.classList.add('metric-normal');
                     } else if (headPose === 'Left' || headPose === 'Right') {
-                        element.classList.remove('metric-normal', 'metric-critical');
                         element.classList.add('metric-warning');
                     } else if (headPose === 'Down') {
-                        element.classList.remove('metric-normal', 'metric-warning');
                         element.classList.add('metric-critical');
-                    } else {
-                        element.classList.remove('metric-normal', 'metric-warning', 'metric-critical');
                     }
-                } else {
-                    console.error('Element with ID headPose not found');
                 }
             }
 
             // 更新警報跑馬燈
-
             updateAlertMarquee(alerts) {
                 const marquee = document.querySelector('.recent-alerts');
                 if (!marquee) return;
 
                 if (alerts && alerts.length > 0) {
                     const latestAlert = alerts[alerts.length - 1];
-                    marquee.querySelector('marquee').textContent = `⚠️ ${latestAlert.message}`;
+                    const marqueeElement = marquee.querySelector('marquee');
+                    if (marqueeElement) {
+                        marqueeElement.textContent = `⚠️ ${latestAlert.message}`;
+                    }
                     marquee.style.display = 'block';
                 } else {
                     marquee.style.display = 'none';
                 }
             }
-
-            // // 獲取歷史事件
-            // async fetchEvents() {
-            //     try {
-            //         const response = await fetch('http://localhost:5000/events');
-            //         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                    
-            //         const data = await response.json();
-            //         this.updateEventTable(data);
-            //     } catch (error) {
-            //         console.error('事件獲取失敗:', error);
-            //     }
-            // }
-
-            // updateEventTable(events) {
-            //     const tbody = document.getElementById('eventTableBody');
-            //     if (!tbody) return;
-
-            //     tbody.innerHTML = '';
-                
-            //     if (events.length === 0) {
-            //         tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; opacity: 0.6;">暫無數據</td></tr>';
-            //         return;
-            //     }
-
-            //     const recentEvents = events.slice(-5).reverse();
-            //     recentEvents.forEach(event => {
-            //         const row = tbody.insertRow();
-            //         row.innerHTML = `
-            //             <td>${event.timestamp}</td>
-            //             <td>${event.event}</td>
-            //             <td>${event.status ? '⚠️' : '✅'}</td>
-            //         `;
-            //     });
-            // }
 
             // 更新警報清單
             async updateAlertTicker() {
@@ -1539,7 +1547,7 @@
 
                 container.innerHTML = '<h4 class="metrics-title">最近警報</h4>';
 
-                if (events.length === 0) {
+                if (!events || events.length === 0) {
                     container.innerHTML += '<div style="text-align: center; opacity: 0.6; padding: 20px;">暫無警報</div>';
                     return;
                 }
@@ -1566,9 +1574,9 @@
 
             // 切換工作狀態
             async toggleWorkStatus() {
+                console.log('🔄 切換工作狀態...');
                 isWorking = !isWorking;
 
-                // 按下下班按鈕同時重置數據
                 if (!isWorking) {
                     try {
                         const response = await fetch('/reset_status', {
@@ -1585,8 +1593,11 @@
                         console.log('Reset status:', result);
 
                         // 更新狀態顯示
-                        document.getElementById('work-status').textContent = isWorking ? '執行勤務中' : '已下班';
-                        document.getElementById('duty-off-button').textContent = isWorking ? '下班' : '上班';
+                        const statusElement = document.getElementById('work-status');
+                        const buttonElement = document.getElementById('duty-off-button');
+                        
+                        if (statusElement) statusElement.textContent = '已下班';
+                        if (buttonElement) buttonElement.textContent = '上班';
 
                         // 重新更新數據
                         this.updateData(); 
@@ -1594,13 +1605,16 @@
                     } catch (error) {
                         console.error('下班切換失敗:', error);
                         alert('切換失敗，請檢查連線');
-                        // 如果 API 失敗，把狀態切回去
                         isWorking = true;
                     }
                 } else {
                     // 切換成上班邏輯
-                    document.getElementById('work-status').textContent = '執行勤務中';
-                    document.getElementById('duty-off-button').textContent = '下班';
+                    const statusElement = document.getElementById('work-status');
+                    const buttonElement = document.getElementById('duty-off-button');
+                    
+                    if (statusElement) statusElement.textContent = '執行勤務中';
+                    if (buttonElement) buttonElement.textContent = '下班';
+
                 }
             }
 
@@ -1609,9 +1623,18 @@
                     sendMessage();
                 }
             }
+
+            // 清理資源
+            destroy() {
+                console.log('🧹 清理 DashboardApp 資源...');
+                this.clearUpdateIntervals();
+                this.isInitialized = false;
+            }
         }
 
-        // ===== 主題切換功能 =====
+        // ===== 全域函式定義 =====
+        
+        // 主題切換功能
         function toggleTheme() {
             const body = document.body;
             const isLight = body.classList.contains('light-theme');
@@ -1626,7 +1649,7 @@
             }
         }
 
-        // ===== 右側面板切換功能 =====
+        // 右側面板切換功能
         function toggleRightPanel() {
             const chatContainer = document.getElementById('chatContainer');
             const sidebarContent = document.getElementById('sidebarContent');
@@ -1644,7 +1667,6 @@
                 toggleBtn.title = isChatVisible ? '開啟聊天' : '返回儀表板';
             }
 
-            // 聚焦聊天輸入框
             if (!isChatVisible) {
                 setTimeout(() => {
                     const chatInput = document.getElementById('userInput');
@@ -1653,8 +1675,58 @@
             }
         }
 
+        // ===== 聊天功能 =====
+        function addMessageToChat(sender, message) {
+            const chatBox = document.getElementById('chatBox');
+            if (!chatBox) return;
+
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', sender === 'user' ? 'user' : 'bot');
+            messageElement.innerHTML = `<div class="message-content">${message}</div>`;
+            chatBox.appendChild(messageElement);
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            if (!userInput) return;
+
+            const userMessage = userInput.value.trim();
+            if (userMessage === '') return;
+
+            addMessageToChat('user', userMessage);
+            userInput.value = '';
+
+            fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: userMessage })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.reply) {
+                    addMessageToChat('bot', data.reply);
+                } else if (data.error) {
+                    addMessageToChat('bot', `發生錯誤: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                addMessageToChat('bot', `傳送失敗: ${error}`);
+            });
+        }
+
+        function handleChatEnter(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
         // ===== Google Maps 功能 =====
         function initMap() {
+            console.log('🗺️ 初始化 Google Maps...');
             directionsService = new google.maps.DirectionsService();
             directionsRenderer = new google.maps.DirectionsRenderer({
                 draggable: true,
@@ -1662,7 +1734,7 @@
             });
 
             map = new google.maps.Map(document.getElementById("map"), {
-                center: { lat: 25.0330, lng: 121.5654 }, // 台北101
+                center: { lat: 25.0330, lng: 121.5654 },
                 zoom: 13,
                 mapTypeControl: false,
                 streetViewControl: false,
@@ -1671,7 +1743,6 @@
 
             directionsRenderer.setMap(map);
             
-            // 監聽路線變化
             directionsRenderer.addListener("directions_changed", () => {
                 const directions = directionsRenderer.getDirections();
                 const route = directions.routes[0];
@@ -1718,7 +1789,6 @@
                         const leg = result.routes[0].legs[0];
                         updateRouteInfo(leg.duration.text, leg.distance.text);
                         
-                        // 顯示成功訊息
                         showNotification(`路線規劃成功！預計 ${leg.duration.text}，距離 ${leg.distance.text}`, 'success');
                     } else {
                         console.error("路線規劃失敗:", status);
@@ -1751,7 +1821,6 @@
         }
 
         function showNotification(message, type = 'info') {
-            // 簡單的通知功能
             const notification = document.createElement('div');
             notification.style.cssText = `
                 position: fixed;
@@ -1785,385 +1854,10 @@
             }, 4000);
         }
 
-        // ===== 應用程式啟動 =====
-        document.addEventListener('DOMContentLoaded', () => {
-            new DashboardApp();
-        });
-
-        // ===== 清理資源 =====
-        window.addEventListener('beforeunload', () => {
-            Object.values(updateIntervals).forEach(intervalId => {
-                if (intervalId) clearInterval(intervalId);
-            });
-        });
-
-        // ===== 聊天功能 =====
-        // 取得所有需要的 DOM 元素
-    const chatBox = document.getElementById('chatBox');
-    const userInput = document.getElementById('userInput');
-    const sendButton = document.querySelector('.chat-input button');
-
-    // 輔助函式：新增訊息到聊天介面
-    function addMessageToChat(sender, message) {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message', sender === 'user' ? 'user' : 'bot');
-        messageElement.innerHTML = `<div class="message-content">${message}</div>`;
-        chatBox.appendChild(messageElement);
-
-        // 自動捲動到最底部
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    // 處理發送訊息的邏輯
-    function sendMessage() {
-        const userMessage = userInput.value.trim();
-
-        if (userMessage === '') {
-            return; // 如果訊息是空的，就什麼都不做
-        }
-
-        // 將使用者訊息顯示在介面上
-        addMessageToChat('user', userMessage);
-        userInput.value = ''; // 清空輸入框
-
-        // 使用 Fetch API 發送訊息到 Flask 後端
-        fetch('/chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ message: userMessage })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.reply) {
-                // 將 Gemini 的回應顯示在介面上
-                addMessageToChat('bot', data.reply);
-            } else if (data.error) {
-                addMessageToChat('bot', `發生錯誤: ${data.error}`);
-            }
-        })
-        .catch(error => {
-            addMessageToChat('bot', `傳送失敗: ${error}`);
-        });
-    }
-
-    // 監聽發送按鈕的點擊事件
-    sendButton.addEventListener('click', sendMessage);
-
-    // 處理按下 Enter 鍵的事件
-    function handleChatEnter(event) {
-        if (event.key === 'Enter') {
-            sendMessage();
-        }
-    }
-    </script>
-
-    <script type="module">
-        // 🔐 Firebase 認證系統 - 改進版本
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { 
-        getAuth, 
-        signInWithEmailAndPassword, 
-        createUserWithEmailAndPassword, 
-        updateProfile, 
-        onAuthStateChanged,
-        signOut,
-        sendEmailVerification,
-        sendPasswordResetEmail
-    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-
-    // ⚠️ 安全提醒：生產環境中，請將此配置移到環境變數
-    const firebaseConfig = {
-        apiKey: "AIzaSyDgV-g1AfMlVoX2aMcTwTUwiTh-UtFI2WM",
-        authDomain: "project-6479993579264918362.firebaseapp.com",
-        projectId: "project-6479993579264918362",
-        storageBucket: "project-6479993579264918362.firebasestorage.app",
-        messagingSenderId: "722191697784",
-        appId: "1:722191697784:web:ff073399d78518b6d5aa8d",
-        measurementId: "G-Q1VEEC7LTS"
-    };
-
-    // 初始化 Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    // 全域變數
-    let currentMode = "login";
-    let isProcessing = false; // 防止重複提交
-
-    // 📝 表單驗證函數
-    function validateForm(email, password, name = "", mode = "login") {
-        const errors = [];
-        
-        // Email 驗證
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!email) {
-            errors.push("請輸入電子郵件");
-        } else if (!emailRegex.test(email)) {
-            errors.push("請輸入有效的電子郵件格式");
-        }
-        
-        // 密碼驗證
-        if (!password) {
-            errors.push("請輸入密碼");
-        } else if (password.length < 6) {
-            errors.push("密碼至少需要 6 個字元");
-        }
-        
-        // 註冊時的姓名驗證
-        if (mode === "register" && !name.trim()) {
-            errors.push("請輸入姓名");
-        }
-        
-        return errors;
-    }
-
-    // 🎨 UI 控制函數
-    function showLoading(show = true) {
-        const submitBtn = document.getElementById("submitBtn");
-        const loadingText = currentMode === "login" ? "登入中..." : "註冊中...";
-        const normalText = currentMode === "login" ? "登入" : "註冊";
-        
-        if (show) {
-            submitBtn.textContent = loadingText;
-            submitBtn.disabled = true;
-            submitBtn.style.opacity = "0.7";
-        } else {
-            submitBtn.textContent = normalText;
-            submitBtn.disabled = false;
-            submitBtn.style.opacity = "1";
-        }
-    }
-
-    function showError(message) {
-        const errorMsg = document.getElementById("errorMsg");
-        errorMsg.textContent = message;
-        errorMsg.style.display = "block";
-        
-        // 自動隱藏錯誤訊息
-        setTimeout(() => {
-            errorMsg.style.display = "none";
-        }, 5000);
-    }
-
-    function clearError() {
-        const errorMsg = document.getElementById("errorMsg");
-        errorMsg.textContent = "";
-        errorMsg.style.display = "none";
-    }
-
-    // 🔓 Modal 控制
-    window.openModal = function(mode) {
-        currentMode = mode;
-        const modal = document.getElementById("authModal");
-        const modalTitle = document.getElementById("modalTitle");
-        const nameField = document.getElementById("nameField");
-        const submitBtn = document.getElementById("submitBtn");
-        
-        modal.style.display = "flex";
-        modalTitle.textContent = (mode === "login") ? "登入" : "註冊";
-        nameField.style.display = (mode === "register") ? "block" : "none";
-        submitBtn.textContent = (mode === "login") ? "登入" : "註冊";
-        
-        // 清空表單和錯誤訊息
-        document.getElementById("emailInput").value = "";
-        document.getElementById("passwordInput").value = "";
-        document.getElementById("nameInput").value = "";
-        clearError();
-    }
-
-    window.closeModal = function() {
-        if (!isProcessing) {
-            document.getElementById("authModal").style.display = "none";
-            clearError();
-        }
-    }
-
-    // 🚪 登出函數
-    window.logout = async function() {
-        try {
-            await signOut(auth);
-            console.log("用戶已登出");
-            // 可以在這裡重定向到首頁
-            // window.location.href = "/";
-        } catch (error) {
-            console.error("登出失敗:", error);
-            alert("登出失敗，請重試");
-        }
-    }
-
-    // 📧 忘記密碼
-    window.resetPassword = async function() {
-        const email = prompt("請輸入您的電子郵件地址：");
-        if (!email) return;
-        
-        try {
-            await sendPasswordResetEmail(auth, email);
-            alert("密碼重設信已發送到您的信箱，請檢查郵件");
-        } catch (error) {
-            console.error("發送重設密碼信失敗:", error);
-            alert("發送失敗，請確認電子郵件地址是否正確");
-        }
-    }
-
-    // 🎯 主要認證邏輯
-    document.addEventListener('DOMContentLoaded', function() {
-        const submitBtn = document.getElementById("submitBtn");
-        
-        if (submitBtn) {
-            submitBtn.addEventListener("click", async () => {
-                if (isProcessing) return; // 防止重複提交
-                
-                const email = document.getElementById("emailInput").value.trim();
-                const password = document.getElementById("passwordInput").value;
-                const name = document.getElementById("nameInput").value.trim();
-                
-                // 表單驗證
-                const errors = validateForm(email, password, name, currentMode);
-                if (errors.length > 0) {
-                    showError(errors.join("、"));
-                    return;
-                }
-                
-                isProcessing = true;
-                showLoading(true);
-                clearError();
-                
-                try {
-                    if (currentMode === "register") {
-                        // 註冊流程
-                        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                        const user = userCredential.user;
-                        
-                        // 更新用戶顯示名稱
-                        if (name) {
-                            await updateProfile(user, { displayName: name });
-                        }
-                        
-                        // 發送驗證郵件（可選）
-                        try {
-                            await sendEmailVerification(user);
-                            console.log("驗證郵件已發送");
-                        } catch (emailError) {
-                            console.log("發送驗證郵件失敗:", emailError);
-                        }
-                        
-                        alert("註冊成功！歡迎加入我們");
-                        closeModal();
-                        
-                        // 註冊成功後跳轉到會員資料頁
-                        setTimeout(() => {
-                            window.location.href = "/membership";
-                        }, 1000);
-                        
-                    } else {
-                        // 登入流程
-                        await signInWithEmailAndPassword(auth, email, password);
-                        alert("登入成功！");
-                        closeModal();
-                    }
-                    
-                } catch (error) {
-                    console.error("認證失敗:", error);
-                    
-                    // 更友善的錯誤訊息
-                    let errorMessage = "操作失敗，請重試";
-                    switch (error.code) {
-                        case 'auth/email-already-in-use':
-                            errorMessage = "此電子郵件已被註冊";
-                            break;
-                        case 'auth/weak-password':
-                            errorMessage = "密碼強度不足，請選擇更強的密碼";
-                            break;
-                        case 'auth/user-not-found':
-                            errorMessage = "找不到此帳戶，請確認電子郵件是否正確";
-                            break;
-                        case 'auth/wrong-password':
-                            errorMessage = "密碼錯誤";
-                            break;
-                        case 'auth/invalid-email':
-                            errorMessage = "電子郵件格式不正確";
-                            break;
-                        case 'auth/too-many-requests':
-                            errorMessage = "嘗試次數過多，請稍後再試";
-                            break;
-                        default:
-                            errorMessage = error.message;
-                    }
-                    
-                    showError(errorMessage);
-                } finally {
-                    isProcessing = false;
-                    showLoading(false);
-                }
-            });
-        }
-    });
-
-    // 👤 監聽認證狀態變化
-    onAuthStateChanged(auth, (user) => {
-        const statusElement = document.getElementById("status");
-        
-        if (user) {
-            const displayName = user.displayName || user.email;
-            if (statusElement) {
-                statusElement.textContent = `已登入：${displayName}`;
-            }
-            console.log("用戶已登入:", {
-                uid: user.uid,
-                email: user.email,
-                displayName: user.displayName,
-                emailVerified: user.emailVerified
-            });
-        } else {
-            if (statusElement) {
-                statusElement.textContent = "尚未登入";
-            }
-            console.log("用戶未登入");
-        }
-    });
-
-    // 🏠 會員資料頁面導航
-    window.goProfile = function() {
-        const user = auth.currentUser;
-        
-        if (user) {
-            // 已登入，跳轉到會員資料頁
-            window.location.href = "/membership";
-        } else {
-            // 未登入，顯示提示
-            const needLoginModal = document.getElementById('needLoginModal');
-            if (needLoginModal) {
-                needLoginModal.style.display = 'flex';
-            } else {
-                alert("請先登入才能查看會員資料");
-                openModal('login');
-            }
-        }
-    }
-
-    // 🔍 檢查用戶是否已登入（用於受保護的頁面）
-    window.checkAuth = function() {
-        return new Promise((resolve) => {
-            const unsubscribe = onAuthStateChanged(auth, (user) => {
-                unsubscribe(); // 取消監聽
-                resolve(user);
-            });
-        });
-    }
-
-    // 📤 導出認證物件（供其他模組使用）
-    window.firebaseAuth = auth;
-
-    console.log("🔥 Firebase 認證系統已初始化");
-    </script>
-    <script>
-// 🎯 全域變數
+        // ===== 漢堡選單功能 =====
         let isMenuOpen = false;
-        let isLoggedIn = false; // 模擬登入狀態
+        let isLoggedIn = false;
 
-        // 🍔 選單控制
         function toggleMenu() {
             const hamburgerBtn = document.querySelector('.hamburger-btn');
             const sidebarMenu = document.getElementById('sidebarMenu');
@@ -2171,11 +1865,10 @@
             
             isMenuOpen = !isMenuOpen;
             
-            hamburgerBtn.classList.toggle('active', isMenuOpen);
-            sidebarMenu.classList.toggle('active', isMenuOpen);
-            overlay.classList.toggle('active', isMenuOpen);
+            if (hamburgerBtn) hamburgerBtn.classList.toggle('active', isMenuOpen);
+            if (sidebarMenu) sidebarMenu.classList.toggle('active', isMenuOpen);
+            if (overlay) overlay.classList.toggle('active', isMenuOpen);
             
-            // 防止背景滾動
             document.body.style.overflow = isMenuOpen ? 'hidden' : '';
         }
 
@@ -2185,112 +1878,44 @@
             }
         }
 
-        // 📱 ESC 鍵關閉選單
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && isMenuOpen) {
-                closeMenu();
-            }
-        });
-
-        // 🔔 通知系統
-        function showNotification(message, isError = false) {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `notification ${isError ? 'error' : ''} show`;
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
-        }
-
-        // 🎭 更新UI狀態
-        // function updateUIState() {
-        //     const authSection = document.getElementById('authSection');
-        //     const userSection = document.getElementById('userSection');
-        //     const logoutSection = document.getElementById('logoutSection');
-        //     const userStatus = document.getElementById('userStatus');
-        //     const authIndicator = document.getElementById('authIndicator');
-            
-        //     if (isLoggedIn) {
-        //         authSection.style.display = 'none';
-        //         userSection.style.display = 'block';
-        //         logoutSection.style.display = 'block';
-        //         userStatus.textContent = '已登入：demo@example.com';
-        //         authIndicator.classList.add('logged-in');
-        //     } else {
-        //         authSection.style.display = 'block';
-        //         userSection.style.display = 'none';
-        //         logoutSection.style.display = 'none';
-        //         userStatus.textContent = '尚未登入';
-        //         authIndicator.classList.remove('logged-in');
-        //     }
-        // }
-        window.addEventListener('DOMContentLoaded', function() {
-            // 檢查是否有登入數據
-            if (window.loginData && window.loginData.isLoggedIn) {
-                isLoggedIn = true;
-                currentUserEmail = window.loginData.userEmail; // 儲存用戶email
-            } else {
-                isLoggedIn = false;
-                currentUserEmail = null;
-            }
-            updateUIState();
-        });
-
-        // 修改您的 updateUIState 函數
         function updateUIState() {
             const authSection = document.getElementById('authSection');
             const userSection = document.getElementById('userSection');
             const logoutSection = document.getElementById('logoutSection');
             const userEmail = document.getElementById('userEmail');
             const authIndicator = document.getElementById('authIndicator');
-            const userData = JSON.parse(localStorage.getItem('user_data'));
-            const UserName = document.getElementById('userName');
+            const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
+            const userName = document.getElementById('userName');
             
-            if (isLoggedIn && userData) {
-                authSection.style.display = 'none';
-                userSection.style.display = 'block';
-                logoutSection.style.display = 'block';
-                // 使用實際的用戶email，如果沒有則使用預設值
-                UserName.textContent = userData.name || '使用者';
-                userEmail.textContent = `已登入：${userData.email || 'user@example.com'}`;
-                authIndicator.classList.add('logged-in');
+            if (isLoggedIn && userData && userData.email) {
+                if (authSection) authSection.style.display = 'none';
+                if (userSection) userSection.style.display = 'block';
+                if (logoutSection) logoutSection.style.display = 'block';
+                if (userName) userName.textContent = userData.name || '使用者';
+                if (userEmail) userEmail.textContent = `已登入：${userData.email}`;
+                if (authIndicator) authIndicator.classList.add('logged-in');
             } else {
-                authSection.style.display = 'block';
-                userSection.style.display = 'none';
-                logoutSection.style.display = 'none';
-                // 改成您的註冊email
-                userStatus.textContent = '尚未登入'; // 請將這裡改成您的實際email
-                authIndicator.classList.remove('logged-in');
+                if (authSection) authSection.style.display = 'block';
+                if (userSection) userSection.style.display = 'none';
+                if (logoutSection) logoutSection.style.display = 'none';
+                if (userEmail) userEmail.textContent = '尚未登入';
+                if (authIndicator) authIndicator.classList.remove('logged-in');
             }
         }
 
-        // 🎯 選單動作處理
         function handleMenuAction(action) {
             closeMenu();
             
             switch (action) {
                 case 'login':
                     showNotification('開啟登入視窗');
-                    // 在這裡調用您的 openModal('login') 函數
-                    // openModal('login');
                     setTimeout(() => {
                         window.location.href = '/login';
                     }, 500);
                     break;
                     
-                    // 模擬登入成功
-                    // setTimeout(() => {
-                    //     isLoggedIn = true;
-                    //     updateUIState();
-                    //     showNotification('登入成功！');
-                    // }, 1000);
-                    // break;
-                    
                 case 'register':
                     showNotification('開啟註冊視窗');
-                    // 在這裡調用您的 openModal('register') 函數
-                    // openModal('register');
                     setTimeout(() => {
                         window.location.href = '/membership';
                     }, 500);
@@ -2298,8 +1923,6 @@
                     
                 case 'profile':
                     showNotification('跳轉到會員資料頁面');
-                    // 在這裡調用您的 goProfile() 函數
-                    // goProfile();
                     break;
                     
                 case 'orders':
@@ -2315,8 +1938,6 @@
                         isLoggedIn = false;
                         updateUIState();
                         showNotification('已成功登出');
-                        // 在這裡調用您的 logout() 函數
-                        // logout();
                     }
                     break;
                     
@@ -2325,23 +1946,384 @@
             }
         }
 
-        // 🚀 初始化
-        document.addEventListener('DOMContentLoaded', function() {
+        // ===== 應用程式初始化 =====
+        function initializeDashboard() {
+            console.log('🔧 開始初始化儀表板...');
+            
+            // 清理現有實例
+            if (dashboardApp) {
+                dashboardApp.destroy();
+            }
+            
+            // 創建新實例
+            dashboardApp = new DashboardApp();
+            
+            // 初始化 UI 狀態
+            if (window.loginData && window.loginData.isLoggedIn) {
+                isLoggedIn = true;
+            }
             updateUIState();
-            console.log('🎯 漢堡選單系統已初始化');
+            
+            console.log('✅ 儀表板初始化完成');
+        }
+
+        // ===== 事件監聽器設定 =====
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 DOM 內容已載入，開始初始化...');
+            
+            // 延遲初始化，確保所有資源都已載入
+            setTimeout(() => {
+                initializeDashboard();
+            }, 100);
+
+            // ESC 鍵關閉選單
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && isMenuOpen) {
+                    closeMenu();
+                }
+            });
+
+            // 點擊選單外區域關閉選單
+            document.addEventListener('click', function(e) {
+                const hamburgerBtn = document.querySelector('.hamburger-btn');
+                const sidebarMenu = document.getElementById('sidebarMenu');
+                
+                if (isMenuOpen && hamburgerBtn && sidebarMenu && 
+                    !hamburgerBtn.contains(e.target) && !sidebarMenu.contains(e.target)) {
+                    closeMenu();
+                }
+            });
         });
 
-        // 🖱️ 點擊選單外區域關閉選單
-        document.addEventListener('click', function(e) {
-            const hamburgerBtn = document.querySelector('.hamburger-btn');
-            const sidebarMenu = document.getElementById('sidebarMenu');
+        // ===== 清理資源 =====
+        window.addEventListener('beforeunload', () => {
+            console.log('🧹 清理應用程式資源...');
+            if (dashboardApp) {
+                dashboardApp.destroy();
+            }
+            Object.values(updateIntervals).forEach(intervalId => {
+                if (intervalId) clearInterval(intervalId);
+            });
+        });
+
+        // ===== 全域錯誤處理 =====
+        window.addEventListener('error', function(e) {
+            console.error('全域錯誤:', e.error);
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('未處理的 Promise 拒絕:', e.reason);
+        });
+    </script>
+
+    <!-- Firebase 認證模組 - 獨立載入 -->
+    <script type="module">
+        // Firebase 認證系統 - 改進版本
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            updateProfile, 
+            onAuthStateChanged,
+            signOut,
+            sendEmailVerification,
+            sendPasswordResetEmail
+        } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDgV-g1AfMlVoX2aMcTwTUwiTh-UtFI2WM",
+            authDomain: "project-6479993579264918362.firebaseapp.com",
+            projectId: "project-6479993579264918362",
+            storageBucket: "project-6479993579264918362.firebasestorage.app",
+            messagingSenderId: "722191697784",
+            appId: "1:722191697784:web:ff073399d78518b6d5aa8d",
+            measurementId: "G-Q1VEEC7LTS"
+        };
+
+        // 初始化 Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // 全域變數
+        let currentMode = "login";
+        let isProcessing = false;
+
+        // 表單驗證函數
+        function validateForm(email, password, name = "", mode = "login") {
+            const errors = [];
             
-            if (isMenuOpen && !hamburgerBtn.contains(e.target) && !sidebarMenu.contains(e.target)) {
-                closeMenu();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email) {
+                errors.push("請輸入電子郵件");
+            } else if (!emailRegex.test(email)) {
+                errors.push("請輸入有效的電子郵件格式");
+            }
+            
+            if (!password) {
+                errors.push("請輸入密碼");
+            } else if (password.length < 6) {
+                errors.push("密碼至少需要 6 個字元");
+            }
+            
+            if (mode === "register" && !name.trim()) {
+                errors.push("請輸入姓名");
+            }
+            
+            return errors;
+        }
+
+        // UI 控制函數
+        function showLoading(show = true) {
+            const submitBtn = document.getElementById("submitBtn");
+            if (!submitBtn) return;
+            
+            const loadingText = currentMode === "login" ? "登入中..." : "註冊中...";
+            const normalText = currentMode === "login" ? "登入" : "註冊";
+            
+            if (show) {
+                submitBtn.textContent = loadingText;
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = "0.7";
+            } else {
+                submitBtn.textContent = normalText;
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = "1";
+            }
+        }
+
+        function showError(message) {
+            const errorMsg = document.getElementById("errorMsg");
+            if (errorMsg) {
+                errorMsg.textContent = message;
+                errorMsg.style.display = "block";
+                
+                setTimeout(() => {
+                    errorMsg.style.display = "none";
+                }, 5000);
+            }
+        }
+
+        function clearError() {
+            const errorMsg = document.getElementById("errorMsg");
+            if (errorMsg) {
+                errorMsg.textContent = "";
+                errorMsg.style.display = "none";
+            }
+        }
+
+        // Modal 控制 - 全域函數
+        window.openModal = function(mode) {
+            currentMode = mode;
+            const modal = document.getElementById("authModal");
+            const modalTitle = document.getElementById("modalTitle");
+            const nameField = document.getElementById("nameField");
+            const submitBtn = document.getElementById("submitBtn");
+            
+            if (modal) modal.style.display = "flex";
+            if (modalTitle) modalTitle.textContent = (mode === "login") ? "登入" : "註冊";
+            if (nameField) nameField.style.display = (mode === "register") ? "block" : "none";
+            if (submitBtn) submitBtn.textContent = (mode === "login") ? "登入" : "註冊";
+            
+            // 清空表單和錯誤訊息
+            const emailInput = document.getElementById("emailInput");
+            const passwordInput = document.getElementById("passwordInput");
+            const nameInput = document.getElementById("nameInput");
+            
+            if (emailInput) emailInput.value = "";
+            if (passwordInput) passwordInput.value = "";
+            if (nameInput) nameInput.value = "";
+            clearError();
+        }
+
+        window.closeModal = function() {
+            if (!isProcessing) {
+                const modal = document.getElementById("authModal");
+                if (modal) modal.style.display = "none";
+                clearError();
+            }
+        }
+
+        // 登出函數
+        window.logout = async function() {
+            try {
+                await signOut(auth);
+                console.log("用戶已登出");
+            } catch (error) {
+                console.error("登出失敗:", error);
+                alert("登出失敗，請重試");
+            }
+        }
+
+        // 忘記密碼
+        window.resetPassword = async function() {
+            const email = prompt("請輸入您的電子郵件地址：");
+            if (!email) return;
+            
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alert("密碼重設信已發送到您的信箱，請檢查郵件");
+            } catch (error) {
+                console.error("發送重設密碼信失敗:", error);
+                alert("發送失敗，請確認電子郵件地址是否正確");
+            }
+        }
+
+        // 檢查用戶是否已登入
+        window.checkAuth = function() {
+            return new Promise((resolve) => {
+                const unsubscribe = onAuthStateChanged(auth, (user) => {
+                    unsubscribe();
+                    resolve(user);
+                });
+            });
+        }
+
+        // 導出認證物件
+        window.firebaseAuth = auth;
+
+        // 監聽認證狀態變化
+        onAuthStateChanged(auth, (user) => {
+            const statusElement = document.getElementById("status");
+            
+            if (user) {
+                const displayName = user.displayName || user.email;
+                if (statusElement) {
+                    statusElement.textContent = `已登入：${displayName}`;
+                }
+                
+                // 更新全域登入狀態
+                window.isLoggedIn = true;
+                isLoggedIn = true;
+                
+                // 更新 UI
+                if (typeof updateUIState === 'function') {
+                    updateUIState();
+                }
+                
+                console.log("用戶已登入:", {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName,
+                    emailVerified: user.emailVerified
+                });
+            } else {
+                if (statusElement) {
+                    statusElement.textContent = "尚未登入";
+                }
+                
+                // 更新全域登入狀態
+                window.isLoggedIn = false;
+                isLoggedIn = false;
+                
+                // 更新 UI
+                if (typeof updateUIState === 'function') {
+                    updateUIState();
+                }
+                
+                console.log("用戶未登入");
             }
         });
-        </script>
 
+        // 主要認證邏輯 - 延遲初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                const submitBtn = document.getElementById("submitBtn");
+                
+                if (submitBtn) {
+                    submitBtn.addEventListener("click", async () => {
+                        if (isProcessing) return;
+                        
+                        const emailInput = document.getElementById("emailInput");
+                        const passwordInput = document.getElementById("passwordInput");
+                        const nameInput = document.getElementById("nameInput");
+                        
+                        if (!emailInput || !passwordInput) {
+                            console.warn("認證表單元素未找到");
+                            return;
+                        }
+                        
+                        const email = emailInput.value.trim();
+                        const password = passwordInput.value;
+                        const name = nameInput ? nameInput.value.trim() : "";
+                        
+                        const errors = validateForm(email, password, name, currentMode);
+                        if (errors.length > 0) {
+                            showError(errors.join("、"));
+                            return;
+                        }
+                        
+                        isProcessing = true;
+                        showLoading(true);
+                        clearError();
+                        
+                        try {
+                            if (currentMode === "register") {
+                                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                                const user = userCredential.user;
+                                
+                                if (name) {
+                                    await updateProfile(user, { displayName: name });
+                                }
+                                
+                                try {
+                                    await sendEmailVerification(user);
+                                    console.log("驗證郵件已發送");
+                                } catch (emailError) {
+                                    console.log("發送驗證郵件失敗:", emailError);
+                                }
+                                
+                                alert("註冊成功！歡迎加入我們");
+                                closeModal();
+                                
+                                setTimeout(() => {
+                                    window.location.href = "/membership";
+                                }, 1000);
+                                
+                            } else {
+                                await signInWithEmailAndPassword(auth, email, password);
+                                alert("登入成功！");
+                                closeModal();
+                            }
+                            
+                        } catch (error) {
+                            console.error("認證失敗:", error);
+                            
+                            let errorMessage = "操作失敗，請重試";
+                            switch (error.code) {
+                                case 'auth/email-already-in-use':
+                                    errorMessage = "此電子郵件已被註冊";
+                                    break;
+                                case 'auth/weak-password':
+                                    errorMessage = "密碼強度不足，請選擇更強的密碼";
+                                    break;
+                                case 'auth/user-not-found':
+                                    errorMessage = "找不到此帳戶，請確認電子郵件是否正確";
+                                    break;
+                                case 'auth/wrong-password':
+                                    errorMessage = "密碼錯誤";
+                                    break;
+                                case 'auth/invalid-email':
+                                    errorMessage = "電子郵件格式不正確";
+                                    break;
+                                case 'auth/too-many-requests':
+                                    errorMessage = "嘗試次數過多，請稍後再試";
+                                    break;
+                                default:
+                                    errorMessage = error.message;
+                            }
+                            
+                            showError(errorMessage);
+                        } finally {
+                            isProcessing = false;
+                            showLoading(false);
+                        }
+                    });
+                }
+            }, 500); // 延遲 500ms 確保 DOM 完全準備就緒
+        });
 
+        console.log("🔥 Firebase 認證系統已初始化");
+    </script>
 </body>
 </html>

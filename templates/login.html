@@ -497,9 +497,25 @@
             color: rgba(255, 255, 255, 0.3);
             font-weight: 300;
         }
+
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff64;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 9999;
+            display: none;
+        }
     </style>
 </head>
 <body>
+    <div class="debug-info" id="debugInfo"></div>
+    
     <div class="login-container">
         <div class="status-indicator" title="系統在線"></div>
         
@@ -566,15 +582,62 @@
             <span class="link-separator">|</span>
             <a href="/membership">建立新帳號</a>
         </div>
-
-        <div class="system-info">
-            TechDrive v2.0 | System Online
-        </div>
     </div>
 
-    <script>
+    <script type="module">
+        // Debug 輸出函式
+        function debugLog(message) {
+            console.log(`[LOGIN DEBUG] ${message}`);
+            const debugInfo = document.getElementById('debugInfo');
+            debugInfo.style.display = 'block';
+            debugInfo.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
+        }
+
+        // 導入 Firebase 模組
+        let auth = null;
+        let signInWithEmailAndPassword = null;
+
+        try {
+            const { initializeApp } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js");
+            const { 
+                getAuth, 
+                signInWithEmailAndPassword: signIn, 
+                onAuthStateChanged
+            } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js");
+
+            signInWithEmailAndPassword = signIn;
+
+            const firebaseConfig = {
+                apiKey: "AIzaSyDgV-g1AfMlVoX2aMcTwTUwiTh-UtFI2WM",
+                authDomain: "project-6479993579264918362.firebaseapp.com",
+                projectId: "project-6479993579264918362",
+                storageBucket: "project-6479993579264918362.firebasestorage.app",
+                messagingSenderId: "722191697784",
+                appId: "1:722191697784:web:ff073399d78518b6d5aa8d",
+                measurementId: "G-Q1VEEC7LTS"
+            };
+
+            // 初始化 Firebase
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            
+            debugLog("Firebase 初始化成功");
+
+            // 監聽登入狀態變化
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    debugLog(`用戶已登入: ${user.email}`);
+                } else {
+                    debugLog("用戶未登入");
+                }
+            });
+
+        } catch (error) {
+            debugLog(`Firebase 初始化錯誤: ${error.message}`);
+        }
+
         // 切換密碼顯示/隱藏
-        function togglePassword() {
+        window.togglePassword = function() {
             const passwordInput = document.getElementById('password');
             const toggleBtn = document.querySelector('.toggle-password');
             
@@ -629,15 +692,48 @@
             });
         }
 
+        // 跳轉到主頁面的函式
+        function redirectToHome() {
+            debugLog("開始跳轉到主頁面");
+            
+            // 嘗試多種跳轉方式
+            try {
+                // 方式1: 使用 window.location.href
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    window.location.href = '/';
+                } else {
+                    window.location.href = '/';
+                }
+                
+                // 備用方式：如果2秒後還沒跳轉，使用 replace
+                setTimeout(() => {
+                    debugLog("使用 location.replace 備用跳轉");
+                    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                        window.location.replace('/');
+                    } else {
+                        window.location.replace('/');
+                    }
+                }, 2000);
+                
+            } catch (error) {
+                debugLog(`跳轉錯誤: ${error.message}`);
+                // 最後備用方案
+                alert('登入成功！請手動返回主頁面。');
+            }
+        }
+
         // 處理登入表單提交
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            debugLog("表單提交開始");
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
             const successMessage = document.getElementById('successMessage');
             const loginButton = document.querySelector('.login-button');
+            
+            debugLog(`嘗試登入: ${username}`);
             
             // 隱藏之前的訊息
             errorMessage.style.display = 'none';
@@ -646,53 +742,127 @@
             // 顯示載入狀態
             showLoading(loginButton);
 
-            try {
-                // 模擬API延遲
-                await new Promise(resolve => setTimeout(resolve, 1500));
+            // 檢查是否為測試帳號
+            if (username === 'test@example.com' && password === '123456') {
+                debugLog("使用測試帳號登入");
                 
-                // 模擬登入驗證（在實際應用中應該向後端發送請求）
-                if (username === 'admin' && password === '123456') {
+                // 模擬登入成功
+                const testUserData = {
+                    email: 'test@example.com',
+                    name: '測試用戶',
+                    uid: 'test-uid-123',
+                    loginTime: new Date().toISOString()
+                };
+                
+                try {
+                    localStorage.setItem("user_data", JSON.stringify(testUserData));
+                    debugLog("測試用戶資料已存入 localStorage");
+                    
                     successMessage.style.display = 'block';
                     
-                    // 儲存登入狀態到內存
-                    window.loginData = {
-                        isLoggedIn: true,
-                        userEmail: 'admin@example.com',
-                        username: username,
-                        loginTime: new Date().toISOString()
-                    };
-                    
                     setTimeout(() => {
-                        window.location.href = '/';
-                    }, 2000);
-                } else {
-                    errorMessage.style.display = 'block';
-                    document.getElementById('password').value = '';
+                        hideLoading(loginButton);
+                        redirectToHome();
+                    }, 1500);
+                    
+                } catch (error) {
+                    debugLog(`localStorage 錯誤: ${error.message}`);
+                    hideLoading(loginButton);
                 }
-            } catch (error) {
-                console.error('登入錯誤:', error);
-                errorMessage.textContent = '⚠️ 系統錯誤，請稍後再試';
+                return;
+            }
+
+            // Firebase 登入
+            if (!auth || !signInWithEmailAndPassword) {
+                debugLog("Firebase 尚未初始化");
+                errorMessage.textContent = '⚠️ 系統初始化中，請稍後再試';
                 errorMessage.style.display = 'block';
-            } finally {
+                hideLoading(loginButton);
+                return;
+            }
+
+            try {
+                debugLog("開始 Firebase 登入");
+                const userCredential = await signInWithEmailAndPassword(auth, username, password);
+                const user = userCredential.user;
+                debugLog(`Firebase 登入成功: ${user.email}`);
+
+                // 把登入資料存到 localStorage
+                const userData = {
+                    email: user.email,
+                    name: user.displayName || "用戶",
+                    uid: user.uid,
+                    loginTime: new Date().toISOString()
+                };
+
+                localStorage.setItem("user_data", JSON.stringify(userData));
+                debugLog("用戶資料已存入 localStorage");
+
+                successMessage.style.display = 'block';
+                
+                // 延遲跳轉，讓用戶看到成功訊息
+                setTimeout(() => {
+                    hideLoading(loginButton);
+                    redirectToHome();
+                }, 1500);
+
+            } catch (error) {
+                debugLog(`Firebase 登入錯誤: ${error.message}`);
+                console.error("Firebase 登入錯誤:", error);
+                
+                let errorMsg = '⚠️ 登入失敗';
+                if (error.code === 'auth/invalid-email') {
+                    errorMsg = '⚠️ 請輸入有效的電子郵件地址';
+                } else if (error.code === 'auth/user-disabled') {
+                    errorMsg = '⚠️ 此帳號已被停用';
+                } else if (error.code === 'auth/user-not-found') {
+                    errorMsg = '⚠️ 找不到此帳號';
+                } else if (error.code === 'auth/wrong-password') {
+                    errorMsg = '⚠️ 密碼錯誤';
+                } else if (error.code === 'auth/invalid-credential') {
+                    errorMsg = '⚠️ 帳號或密碼錯誤';
+                }
+                
+                errorMessage.textContent = errorMsg;
+                errorMessage.style.display = 'block';
                 hideLoading(loginButton);
             }
         });
 
         // 忘記密碼功能
-        function showForgotPassword() {
+        window.showForgotPassword = function() {
             alert('🔧 密碼重置服務\n\n請聯繫系統管理員重置密碼：\n📞 電話：02-1234-5678\n📧 Email：admin@techdrive.com\n\n⚡ 24小時技術支援');
         }
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
+            debugLog("DOM 載入完成，初始化頁面");
             addFocusEffects();
             
             // 測試帳號提示（僅供演示）
             setTimeout(() => {
                 if (document.getElementById('username').value === '' && document.getElementById('password').value === '') {
-                    console.log('🔧 測試帳號：admin，密碼：123456');
+                    debugLog('測試帳號：test@example.com，密碼：123456');
+                    console.log('🔧 測試帳號：test@example.com，密碼：123456');
                 }
             }, 3000);
+
+            // 檢查是否已經登入
+            const userData = localStorage.getItem("user_data");
+            if (userData) {
+                debugLog("發現已存在的用戶資料，準備跳轉");
+                try {
+                    const user = JSON.parse(userData);
+                    debugLog(`已登入用戶: ${user.email}`);
+                    // 如果已經登入，直接跳轉
+                    setTimeout(() => {
+                        redirectToHome();
+                    }, 1000);
+                } catch (error) {
+                    debugLog(`解析用戶資料錯誤: ${error.message}`);
+                    localStorage.removeItem("user_data");
+                }
+            }
         });
 
         // 鍵盤快捷鍵
@@ -713,6 +883,23 @@
             input.addEventListener('blur', function() {
                 this.style.transform = 'translateY(0)';
             });
+        });
+
+        // 頁面可見性變化時的處理
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                debugLog("頁面重新可見");
+            }
+        });
+
+        // 頁面載入完成後的額外檢查
+        window.addEventListener('load', function() {
+            debugLog("頁面完全載入完成");
+        });
+
+        // 處理頁面卸載前的清理
+        window.addEventListener('beforeunload', function(e) {
+            debugLog("頁面即將卸載");
         });
     </script>
 </body>

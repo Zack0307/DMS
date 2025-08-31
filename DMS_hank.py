@@ -681,9 +681,8 @@ class DMSSystem:
         rgb_image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
         img_h, img_w = rgb_image.shape[:2]
         face_results = self.face_mesh.process(rgb_image)
-        hands_res = self.hand_mesh.process(rgb_image)
-        phone_near = False
-        if face_results.multi_face_landmarks and hands_res.multi_hand_landmarks:#先檢測有無臉部以及手部
+        
+        if face_results.multi_face_landmarks:#先檢測有無臉部以及手部
             with self.data_lock:
                 self.mesh_points = np.array([np.multiply([p.x, p.y], [img_w, img_h]).astype(int)
                     for p in face_results.multi_face_landmarks[0].landmark])
@@ -696,24 +695,7 @@ class DMSSystem:
                 ear_left = self.blinking_ratio(self.mesh_points_3d)
                 ear_right = ear_left # blinking_ratio calculates for both eyes
                 self.avg_ear = self.analyze_fatigue(ear_left, ear_right)
-                # 手機靠耳
-                for handLms in hands_res.multi_hand_landmarks: #檢測手部
-                    face_landmarks = face_results.multi_face_landmarks[0].landmark
-                    ear_left = np.array([face_landmarks[234].x * img_w, face_landmarks[234].y * img_h])
-                    ear_right = np.array([face_landmarks[454].x * img_w, face_landmarks[454].y * img_h])
-                    # 手掌外框: 使用所有手部 landmarks 計算外框
-                    # hand_pts = np.array([[hl.x * img_w, hl.y * img_h] for hl in handLms.landmark]).astype(int)
-                    # 手腕到耳朵距離
-                    wrist = handLms.landmark[self.mp_hand_mesh.HandLandmark.WRIST]
-                    wrist_pt = np.array([wrist.x * img_w, wrist.y * img_h])
-                    dist = min(np.linalg.norm(wrist_pt - ear_left), np.linalg.norm(wrist_pt - ear_right))
-                    if dist / img_w < PHONE_DIST_TH:
-                        phone_near = True
-                        break
-                if phone_near:
-                    self.add_alert("檢測到手機靠耳", "warning")
 
-            
                 # 計算頭部姿態
                 pitch, yaw, roll = self.calculate_head_pose(self.mesh_points, (img_h, img_w))
                 self.angle_buffer.add([pitch, yaw, roll])
