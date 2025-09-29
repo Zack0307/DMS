@@ -1,5 +1,9 @@
 製作者:國立屏東大學 唐元宗 許瀚升 賴士欹 謝人傑
 
+影片:
+https://youtu.be/Y0mCf9wbXbw
+https://drive.google.com/file/d/1Wn3meD_skf0eSZmJQVmDB9F9uKNYn9Ui/view?usp=sharing
+
 Driver Monitor System 
 ---
 
